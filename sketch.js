@@ -9,6 +9,9 @@
  * Scrolling Background:
  * https://pixfinity.itch.io/the-dungeon-pack
  * 
+ * Buttons:
+ * https://nectanebo.itch.io/menu-buttons
+ * 
  * Author: Gary Huang
  * Date: Mar 19, 2024
  */
@@ -42,12 +45,17 @@ let light, sky, downLayer, middleLayer, topLayer;
 let offSetX = 0;
 
 // game state
-let gameState = shop;
+let gameState = intro;
 
 // home screen menu buttons
 let playButton, shopButton, controlsButton, creditsButton;
-//shop buttons
+
+//shop variables - buttons, if bought
 let pinkButton, owletButton, dudeButton;
+let owletBuy = false;
+let dudeBuy = false;
+
+let backButton;
 
 // enemy variables
 // let enemyHealthWidth;
@@ -168,10 +176,31 @@ function setup(){
     allSprites.autoDraw = false;
     allSprites.autoUpdate = false;
 
+    //intro
+    playButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/Play Button.png');
+    playButton.size(120, 50);
+    playButton.position(430, 310);
+    
+    shopButton = createImg('assets/Prinbles/Black-Icon/Cart.png');
+    shopButton.size(50, 50);
+    shopButton.position(875, 20);
+
+    controlsButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/Controls Button.png');
+    controlsButton.size(120, 50);
+    controlsButton.position(430, 370);
+
+    creditsButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Info Square Button.png');
+    creditsButton.size(50, 50);
+    creditsButton.position(820, 20);
+
     //shop
     pinkButton = createButton('Equipped');
     owletButton = createButton('Buy');
     dudeButton = createButton('Buy');
+
+    backButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Home Square Button.png');
+    backButton.size(50, 50);
+    backButton.position(930, 20);
 }
 
 function enemyHit(enemy, rock){
@@ -195,40 +224,22 @@ function draw(){
 function intro(){
     drawBackground();
 
-    playButton = createButton('Play');
-    playButton.position(windowWidth/2-30, windowHeight/2-30);
     playButton.mousePressed(() => {
         gameState = runGame;
+        playButton.hide();
+        shopButton.hide();
+        controlsButton.hide();
+        creditsButton.hide();
+        backButton.hide();
     });
 
-    shopButton = createButton('Shop');
-    shopButton.position(windowWidth/2-42, windowHeight/2);
-    shopButton.mousePressed(() => {
-        gameState = shop;
-    });
-
-    controlsButton = createButton('Controls');
-    controlsButton.position(windowWidth/2-42, windowHeight/2+30);
     controlsButton.mousePressed(() => {
         gameState = controls;
+        playButton.hide();
+        controlsButton.hide();
     });
 
-    creditsButton = createButton('Credits');
-    creditsButton.position(windowWidth/2-35, windowHeight/2+60);
-    creditsButton.mousePressed(() => {
-        gameState = credits;
-    });
-
-    // remove buttons
-    // playButton.remove();
-    // controlsButton.remove();
-    // creditsButton.remove();
-    // shopButton.remove();
 }
-
-// let pinkBuy = true;
-let owletBuy = false;
-let dudeBuy = false;
 
 function shop(){
     drawBackground();
@@ -236,7 +247,7 @@ function shop(){
     fill('white');
     image(coinImg, 5, 10);
     coinImg.resize(20,20);
-    text(`${coins} coins`, 55, 27);
+    text(`${coins} coins`, 60, 27);
 
     textSize(32);
     text("Shop", 500, 30);
@@ -266,8 +277,6 @@ function shop(){
         }
     });
 
-    text(`${currentCharacter} ${owletBuy}`, 100, 100);
-
     if (owletBuy && currentCharacter != 'Owlet_Monster') owletButton.html('Equip');
     owletButton.position(485, 370);
     owletButton.mousePressed(() => {
@@ -295,8 +304,6 @@ function shop(){
             currentCharacter = 'Dude_Monster';
         }
     });
-
-    
 }
 
 function controls(){
@@ -316,7 +323,9 @@ function credits(){
     Boss by @Elthen's Pixel Art Shop\nhttps://elthen.itch.io/2d-pixel-art-minotaur-sprites\n \
     Background by @Pixfinity\nhttps://pixfinity.itch.io/the-dungeon-pack\n \
     Heart by @Yrixsasow\nhttps://yrixsasow.itch.io/heart-icon-2\n \
-    Coin by @OZU\nhttps://osmanfrat.itch.io/coin", 500, 125);
+    Coin by @OZU\nhttps://osmanfrat.itch.io/coin\n \
+    Buttons by @Nectanebo\nhttps://nectanebo.itch.io/menu-buttons", 500, 125);
+
 }
 
 function runGame(){
@@ -350,7 +359,7 @@ function runGame(){
     }
 
     // boss will face character
-    if (player.x < boss.x)boss.mirror.x = true;
+    if (player.x < boss.x) boss.mirror.x = true;
     else boss.mirror.x = false;
 
     // enemies will go towards character
@@ -388,8 +397,6 @@ function runGame(){
         player.changeAni(`${currentCharacter}throw`);
         rocks.amount++;
         rocks[rocks.amount-1].image = rocksImg[round(random(0, rocksImg.length-1))];
-    }else if (kb.presses('esc')){
-        
     }
 
     if (kb.presses('e') || kb.presses('E')){
@@ -521,5 +528,43 @@ function drawBackground(){
     fill('green');
     textAlign(CENTER);
     textSize(16);
-    text(`${fps} fps`, windowWidth-35, 15);
+    text(`${fps} fps`, 950, 15);
+
+    if (gameState != runGame){
+        creditsButton.mousePressed(() => {
+            if (gameState == shop){
+                pinkButton.hide();
+                owletButton.hide();
+                dudeButton.hide();
+            }else if (gameState == intro){
+                playButton.hide();
+                controlsButton.hide();
+            }
+            gameState = credits;
+        });
+    
+        shopButton.mousePressed(() => {
+            if (gameState == intro){
+                playButton.hide();
+                controlsButton.hide();
+            }
+            gameState = shop;
+            pinkButton.show();
+            owletButton.show();
+            dudeButton.show();
+        });
+    
+        backButton.mousePressed(() => {
+            if (gameState == shop){
+                pinkButton.hide();
+                owletButton.hide();
+                dudeButton.hide();
+            }
+            playButton.show();
+            shopButton.show();
+            controlsButton.show();
+            creditsButton.show();
+            gameState = intro;
+        });
+    }
 }
