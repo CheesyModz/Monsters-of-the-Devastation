@@ -42,17 +42,24 @@ let light, sky, downLayer, middleLayer, topLayer;
 let offSetX = 0;
 
 // game state
-let gameState = runGame;
+let gameState = shop;
 
 // home screen menu buttons
 let playButton, shopButton, controlsButton, creditsButton;
+//shop buttons
+let pinkButton, owletButton, dudeButton;
 
-let stage = 1;
+// enemy variables
+// let enemyHealthWidth;
 let spawnEnemy = true;
 let amountOfEnemies = 10;
+let bossAttacking = true;
+let bossMoves = [];
+
+let stage = 1;
 
 // coins
-let coins = 0;
+let coins = 300;
 let randomCoins;
 let randomCoinGet = true;
 
@@ -96,7 +103,7 @@ function setup(){
     new Canvas(1000, 700);
     world.gravity.y = 5;
 
-    player = new Sprite(100, 400, 32, 32);
+    player = new Sprite(100, 500, 32, 32);
     // player.anis.frameDelay = 30;
     player.scale *= 2;
     player.health = 5;
@@ -132,18 +139,17 @@ function setup(){
     enemies = new Group();
     enemies.x = 700;
     enemies.y = 540;
-    enemies.speed = 5;
-    enemies.health = () => round(random(20));
-    enemies.hit = false;
+    enemies.health = () => round(random(2));
+    // enemies.hit = false;
 
     enemies.collides(rocks, enemyHit);
     enemies.collides(player, playerHit);
 
-    boss = new Sprite(500, 400, 54, 42);
+    boss = new Sprite(500, 500, 54, 42);
     boss.spriteSheet = bossImg;
     // boss.anis.frameDelay = 30;
     boss.scale *= 2;
-    boss.health = 100;
+    boss.health = 1;
     boss.addAnis({
         run: { row:1, frameSize: [96, 92], frames: 8 },
         angry: { row:2, frameSize: [96, 94], frames: 5 },
@@ -161,10 +167,12 @@ function setup(){
 
     allSprites.autoDraw = false;
     allSprites.autoUpdate = false;
-}
 
-// let enemyHealthWidth;
-let bossAttacking = true;
+    //shop
+    pinkButton = createButton('Equipped');
+    owletButton = createButton('Buy');
+    dudeButton = createButton('Buy');
+}
 
 function enemyHit(enemy, rock){
     rock.remove();
@@ -218,6 +226,10 @@ function intro(){
     // shopButton.remove();
 }
 
+// let pinkBuy = true;
+let owletBuy = false;
+let dudeBuy = false;
+
 function shop(){
     drawBackground();
 
@@ -227,24 +239,64 @@ function shop(){
     text(`${coins} coins`, 55, 27);
 
     textSize(32);
-    text("Shop", windowWidth/2, 30);
+    text("Shop", 500, 30);
 
-    image(pinkMonster, windowWidth/4-50, 250);
-    image(owletMonster, windowWidth/4*2-50, 250);
-    image(dudeMonster, windowWidth/4*3-50, 250);
+    image(pinkMonster, 210, 250);
+    image(owletMonster, 460, 250);
+    image(dudeMonster, 710, 250);
 
     pinkMonster.resize(100, 100);
     owletMonster.resize(100, 100);
     dudeMonster.resize(100, 100);
 
     textSize(16);
-    image(coinImg, windowWidth/4-30, 230);
-    text('free', windowWidth/4+10, 245);
-    image(coinImg, windowWidth/4*2-30, 230);
-    text('100', windowWidth/4*2+10, 245);
-    image(coinImg, windowWidth/4*3-30, 230);
-    text('200',  windowWidth/4*3+10, 245);
+    image(coinImg, 230, 230);
+    text('free', 270, 245);
+    image(coinImg, 480, 230);
+    text('100', 520, 245);
+    image(coinImg, 730, 230);
+    text('200',  770, 245);
 
+    if (currentCharacter != 'Pink_Monster') pinkButton.html('Equip');
+    pinkButton.position(215, 370);
+    pinkButton.mousePressed(() => {
+        if (currentCharacter != 'Pink_Monster'){
+            currentCharacter = 'Pink_Monster';
+            pinkButton.html('Equipped');
+        }
+    });
+
+    text(`${currentCharacter} ${owletBuy}`, 100, 100);
+
+    if (owletBuy && currentCharacter != 'Owlet_Monster') owletButton.html('Equip');
+    owletButton.position(485, 370);
+    owletButton.mousePressed(() => {
+        if (coins >= 100 && !owletBuy && currentCharacter != 'Owlet_Monster'){
+            coins -= 100;
+            owletBuy = true;
+            currentCharacter = 'Owlet_Monster';
+            owletButton.html('Equipped')
+        }else if (owletBuy){
+            owletButton.html('Equipped')
+            currentCharacter = 'Owlet_Monster';
+        }
+    });
+
+    if (dudeBuy && currentCharacter != 'Dude_Monster') dudeButton.html('Equip');
+    dudeButton.position(745, 370);
+    dudeButton.mousePressed(() => {
+        if (coins >= 200 && !dudeBuy && currentCharacter != 'Dude_Monster'){
+            coins -= 200;
+            dudeBuy = true;
+            currentCharacter = 'Dude_Monster';
+            dudeButton.html('Equipped')
+        }else if (dudeBuy){
+            dudeButton.html('Equipped')
+            currentCharacter = 'Dude_Monster';
+        }
+    });
+
+    
 }
 
 function controls(){
@@ -257,12 +309,14 @@ function credits(){
 
     fill('white');
 
-    textSize(16);
+    textSize(24);
     text("Author: Gary Huang\n \
     Characters by @Free Game Assets(GUI, Sprite, Tilesets)\nhttps://free-game-assets.itch.io/free-tiny-hero-sprites-pixel-art\n \
     Monsters by @DeepDiveGameStudio\nhttps://deepdivegamestudio.itch.io/demon-sprite-pack\n \
     Boss by @Elthen's Pixel Art Shop\nhttps://elthen.itch.io/2d-pixel-art-minotaur-sprites\n \
-    Background by @Pixfinity\nhttps://pixfinity.itch.io/the-dungeon-pack", windowWidth/2, windowHeight/2-125);
+    Background by @Pixfinity\nhttps://pixfinity.itch.io/the-dungeon-pack\n \
+    Heart by @Yrixsasow\nhttps://yrixsasow.itch.io/heart-icon-2\n \
+    Coin by @OZU\nhttps://osmanfrat.itch.io/coin", 500, 125);
 }
 
 function runGame(){
@@ -322,13 +376,10 @@ function runGame(){
         player.vel.x = 2;
         isWalking = true;
         facing = true;
-    }else if (kb.presses('w') || kb.presses('W')){
+    }
+    if (kb.presses('w') || kb.presses('W')){
         player.changeAni(`${currentCharacter}jump`);
         player.vel.y = 20;
-    }else if (kb.presses('x') || kb.presses('X')){
-        player.changeAni(`${currentCharacter}death`);
-    }else if (kb.presses('z') || kb.presses('Z')){
-        player.changeAni(`${currentCharacter}hurt`);
     }else if (kb.presses('j') || kb.presses('J')){
         player.changeAni(`${currentCharacter}atk1`);
     }else if (kb.presses('k') || kb.presses('K')){
@@ -366,8 +417,16 @@ function runGame(){
     hand.y = player.y;
 
     if (boss.collides(player) && bossAttacking){
+        player.changeAni(`${currentCharacter}hurt`);
         player.health--;
-        if (player.health <= 0) gameState = gameOver;
+        if (player.health <= 0){
+            player.changeAni(`${currentCharacter}death`);
+            gameState = gameOver;
+        }
+    }
+
+    if (enemies.amount == 0){
+        gameState = stageCompletion;
     }
 
     allSprites.draw();
@@ -386,7 +445,7 @@ function stageCompletion(){
     textSize(32);
     text(`You found ${randomCoins}`, windowWidth/2-40, windowHeight/2-30);
     text("Press 'b' to continue", windowWidth/2-40, windowHeight/2+30);
-    text("Power-ups found", windowWidth/2-20, windowHeight/2-30);
+    text("Power-ups found", windowWidth/2-30, windowHeight/2+90);
 
 
     if (kb.presses('b')){
@@ -394,6 +453,7 @@ function stageCompletion(){
         stage++;
         gameState = runGame; 
         randomCoinGet = true;
+        spawnEnemy = true;
     }
 }
 
@@ -409,7 +469,7 @@ function gameOver(){
     text("Press 'b' to continue", windowWidth/2-10, windowHeight/2+30);
     
     if (kb.presses('b')){
-        gameState = runGame;
+        gameState = intro;
         player.health = 5;
         player.x = 100;
         player.y = 400;
