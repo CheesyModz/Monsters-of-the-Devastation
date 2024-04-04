@@ -12,6 +12,9 @@
  * Buttons:
  * https://nectanebo.itch.io/menu-buttons
  * 
+ * Key images:
+ * https://illugion.itch.io/pixel-keyboard-lite
+ * 
  * Author: Gary Huang
  * Date: Mar 19, 2024
  */
@@ -50,12 +53,23 @@ let gameState = intro;
 // home screen menu buttons
 let playButton, shopButton, controlsButton, creditsButton;
 
-//shop variables - buttons, if bought
+// shop variables - buttons, if bought
 let pinkButton, owletButton, dudeButton;
 let owletBuy = false;
 let dudeBuy = false;
 
 let backButton;
+
+// control variables
+let keysImgs = [];
+let keysInfo = [
+    "Jump",
+    "Move character to the left",
+    "Move character to the right",
+    "Punch",
+    "Double punch",
+    "Throw rocks"
+];
 
 // enemy variables
 // let enemyHealthWidth;
@@ -105,6 +119,13 @@ function preload(){
     pinkMonster = loadImage('assets/Pink_Monster/Pink_Monster.png');
     owletMonster = loadImage('assets/Owlet_Monster/Owlet_Monster.png');
     dudeMonster = loadImage('assets/Dude_Monster/Dude_Monster.png');
+
+    keysImgs.push(loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_w.png'));
+    keysImgs.push(loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_a.png'));
+    keysImgs.push(loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_d.png'));
+    keysImgs.push(loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_j.png'));
+    keysImgs.push(loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_k.png'));
+    keysImgs.push(loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_l.png'));
 }
 
 function setup(){
@@ -224,6 +245,10 @@ function draw(){
 function intro(){
     drawBackground();
 
+    fill('white');
+    textSize(48);
+    text("Monsters of the Devastation", 500, 250);
+
     playButton.mousePressed(() => {
         gameState = runGame;
         playButton.hide();
@@ -231,6 +256,7 @@ function intro(){
         controlsButton.hide();
         creditsButton.hide();
         backButton.hide();
+        player.ani = `${currentCharacter}idle`;
     });
 
     controlsButton.mousePressed(() => {
@@ -309,6 +335,18 @@ function shop(){
 function controls(){
     drawBackground();
 
+    fill('white');
+    textSize(32);
+    text("Controls", 500, 50);
+
+    textSize(32);
+    textAlign(LEFT);
+    for (let i = 0; i < keysImgs.length; i++){
+        keysImgs[i].resize(50, 50);
+        image(keysImgs[i], 300, 90*(i+1));
+        text(keysInfo[i], 360, 30+90*(i+1));
+    }
+
 }
 
 function credits(){
@@ -324,7 +362,8 @@ function credits(){
     Background by @Pixfinity\nhttps://pixfinity.itch.io/the-dungeon-pack\n \
     Heart by @Yrixsasow\nhttps://yrixsasow.itch.io/heart-icon-2\n \
     Coin by @OZU\nhttps://osmanfrat.itch.io/coin\n \
-    Buttons by @Nectanebo\nhttps://nectanebo.itch.io/menu-buttons", 500, 125);
+    Buttons by @Nectanebo\nhttps://nectanebo.itch.io/menu-buttons\n \
+    Keys by @illugion\nhttps://illugion.itch.io/pixel-keyboard-lite", 500, 125);
 
 }
 
