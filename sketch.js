@@ -26,7 +26,6 @@ let timer = 1;
 // character variables
 // facing: direction false for left, true for right
 let facing = true;
-let isWalking = false;
 
 // sprite objects
 let player, hand, rocks, floor, box;
@@ -75,13 +74,13 @@ let keysInfo = [
 // let enemyHealthWidth;
 let spawnEnemy = true;
 let amountOfEnemies = 10;
-let bossAttacking = true;
+let bossAttacking = false;
 let bossMoves = [];
 
 let stage = 1;
 
 // coins
-let coins = 300;
+let coins = 0;
 let randomCoins;
 let randomCoinGet = true;
 
@@ -133,7 +132,6 @@ function setup(){
     world.gravity.y = 5;
 
     player = new Sprite(100, 500, 32, 32);
-    // player.anis.frameDelay = 30;
     player.scale *= 2;
     player.health = 5;
 
@@ -149,7 +147,16 @@ function setup(){
         player.addAni(`${character}throw`, `assets/${character}/${character}_Throw_4.png`, { frameSize: [32, 32], frames: 4 });
         player.addAni(`${character}idle`, `assets/${character}/${character}_Idle_4.png`, { frameSize: [32, 32], frames: 4 });
     }
-    player.ani = `${currentCharacter}idle`;
+
+    playerSensor = new Sprite();
+    playerSensor.x = player.x;
+    playerSensor.y = player.y + 5;
+    playerSensor.w = 50;
+    playerSensor.h = 60;
+    playerSensor.collider = 'none';
+    playerSensor.visible = false;
+
+    new GlueJoint(player, playerSensor);
 
     rocks = new Group();
     rocks.x = () => hand.x;
@@ -166,17 +173,14 @@ function setup(){
 	floor.stroke = color(255, 0, 0, 0);
 
     enemies = new Group();
-    enemies.x = 700;
     enemies.y = 540;
     enemies.health = () => round(random(2));
-    // enemies.hit = false;
 
     enemies.collides(rocks, enemyHit);
     enemies.collides(player, playerHit);
 
-    boss = new Sprite(500, 500, 54, 42);
+    boss = new Sprite(1100, 500, 54, 42);
     boss.spriteSheet = bossImg;
-    // boss.anis.frameDelay = 30;
     boss.scale *= 2;
     boss.health = 1;
     boss.addAnis({
@@ -290,9 +294,9 @@ function shop(){
     image(coinImg, 230, 230);
     text('free', 270, 245);
     image(coinImg, 480, 230);
-    text('100', 520, 245);
+    text('50', 515, 245);
     image(coinImg, 730, 230);
-    text('200',  770, 245);
+    text('100',  770, 245);
 
     if (currentCharacter != 'Pink_Monster') pinkButton.html('Equip');
     pinkButton.position(215, 370);
@@ -306,8 +310,8 @@ function shop(){
     if (owletBuy && currentCharacter != 'Owlet_Monster') owletButton.html('Equip');
     owletButton.position(485, 370);
     owletButton.mousePressed(() => {
-        if (coins >= 100 && !owletBuy && currentCharacter != 'Owlet_Monster'){
-            coins -= 100;
+        if (coins >= 50 && !owletBuy && currentCharacter != 'Owlet_Monster'){
+            coins -= 50;
             owletBuy = true;
             currentCharacter = 'Owlet_Monster';
             owletButton.html('Equipped')
@@ -320,8 +324,8 @@ function shop(){
     if (dudeBuy && currentCharacter != 'Dude_Monster') dudeButton.html('Equip');
     dudeButton.position(745, 370);
     dudeButton.mousePressed(() => {
-        if (coins >= 200 && !dudeBuy && currentCharacter != 'Dude_Monster'){
-            coins -= 200;
+        if (coins >= 100 && !dudeBuy && currentCharacter != 'Dude_Monster'){
+            coins -= 100;
             dudeBuy = true;
             currentCharacter = 'Dude_Monster';
             dudeButton.html('Equipped')
@@ -367,6 +371,10 @@ function credits(){
 
 }
 
+let opacity = 255;
+let shootCd = 0;
+let shot = false;
+
 function runGame(){
     drawBackground();
 
@@ -375,25 +383,36 @@ function runGame(){
         heartImg.resize(25,25);
     }
 
+    push();
+        fill(255, opacity);
+        textSize(64);
+        text(`Stage ${stage}`, 500, 200);
+        if (opacity > 0) opacity -= 3;
+    pop();
+
     fill('white');
     image(coinImg, 5, 30);
     coinImg.resize(20,20);
     text(`${coins} coins`, 55, 47);
 
     fill('blue');
-    text(`Stage: ${stage} / 5`, 45, 70);
+    text(`Stage: ${stage} / 3`, 45, 70);
 
     player.debug = mouse.pressing();
     rocks.debug = mouse.pressing();
     enemies.debug = mouse.pressing();
     boss.debug = mouse.pressing();
 
-    if (stage != 5 && spawnEnemy){
-        for (let i = 0; i < stage*10; i++){
+    if (stage != 3 && spawnEnemy){
+        for (let i = 0; i < stage*5; i++){
             enemies.amount++;
             enemies[enemies.amount-1].ani = enemiesAni[round(random(0, enemiesAni.length-1))];
             enemies[enemies.amount-1].scale *= 3;
+            enemies[enemies.amount-1].x = 500 + (i*50);
         }
+        spawnEnemy = false;
+    }else if (stage == 3 && spawnEnemy){
+
         spawnEnemy = false;
     }
 
@@ -404,38 +423,52 @@ function runGame(){
     // enemies will go towards character
     for (let i = 0; i < enemies.length; i++){
         if (player.x < enemies[i].x){
-            enemies[i].speed -= 3;
+            enemies[i].move('left', 2);
             enemies[i].mirror.x = true;
         }else{
-            enemies[i].speed += 3;
+            enemies[i].move('right', 2);
             enemies[i].mirror.x = false;
         }
     }
 
+    if (playerSensor.overlapping(floor)){
+        if (kb.presses('w') || kb.presses('W')){
+            player.changeAni(`${currentCharacter}jump`);
+            player.vel.y = 15;
+        }
+    }
+    
     if (kb.pressing('a') || kb.pressing('A')){
         player.changeAni(`${currentCharacter}run`);
         player.mirror.x = true;
         player.vel.x = -2;
-        isWalking = true;
         facing = false;
     }else if (kb.pressing('d') || kb.pressing('D')){
         player.changeAni(`${currentCharacter}run`);
         player.mirror.x = false;
         player.vel.x = 2;
-        isWalking = true;
         facing = true;
+    }else{
+        if (player.vel.y == 0) player.changeAni(`${currentCharacter}idle`);
     }
-    if (kb.presses('w') || kb.presses('W')){
-        player.changeAni(`${currentCharacter}jump`);
-        player.vel.y = 20;
-    }else if (kb.presses('j') || kb.presses('J')){
+
+    if (kb.pressing('j') || kb.pressing('J')){
         player.changeAni(`${currentCharacter}atk1`);
-    }else if (kb.presses('k') || kb.presses('K')){
+    }else if (kb.pressing('k') || kb.pressing('K')){
         player.changeAni(`${currentCharacter}atk2`);
-    }else if (kb.presses('l') || kb.presses('L')){
+    }else if (kb.pressing('l') || kb.pressing('L')){
+        if (!shot){
+            rocks.amount++;
+            rocks[rocks.amount-1].image = rocksImg[round(random(0, rocksImg.length-1))];
+            shot = true;
+        }
         player.changeAni(`${currentCharacter}throw`);
-        rocks.amount++;
-        rocks[rocks.amount-1].image = rocksImg[round(random(0, rocksImg.length-1))];
+    }
+
+    if (shot) shootCd += 1;
+    if (shootCd == 25){
+        shot = false;
+        shootCd = 0;
     }
 
     if (kb.presses('e') || kb.presses('E')){
@@ -444,23 +477,13 @@ function runGame(){
         enemies[enemies.amount-1].scale *= 3;
     }
 
-    // loop through each enemy, if they are hit display health bar on top
-    // for (let i = 0; i < enemies.length; i++){
-    //     if (enemies.hit){
-    //         // enemy healthBar  
-    //         enemyHealthWidth = map(enemy.health, 0, 10, 0, 200);
-    //         fill('green');
-    //         rect(20, 20, enemyHealthWidth, 20);
-    //         stroke('white');
-    //         noFill();
-    //         rect(20, 20, enemies., 20);
-    //         noStroke();  
-    //     }
-    // }
-
     if (facing) hand.x = player.x+35;
     else hand.x = player.x-35;
     hand.y = player.y;
+
+    // player cannot go pass screen size
+    if (player.x < 20) player.x = 20;
+    else if (player.x > 980) player.x = 980;
 
     if (boss.collides(player) && bossAttacking){
         player.changeAni(`${currentCharacter}hurt`);
@@ -489,17 +512,25 @@ function stageCompletion(){
     fill('white');
     textAlign(CENTER);
     textSize(32);
-    text(`You found ${randomCoins}`, windowWidth/2-40, windowHeight/2-30);
-    text("Press 'b' to continue", windowWidth/2-40, windowHeight/2+30);
-    text("Power-ups found", windowWidth/2-30, windowHeight/2+90);
+    text(`You found ${randomCoins}`, 460, 320);
+    text("Press 'b' to continue", 460, 380);
+    text("Power-ups found", 470, 440);
 
-
-    if (kb.presses('b')){
+    if (kb.presses('b') || kb.presses('B')){
         coins += randomCoins;
         stage++;
-        gameState = runGame; 
         randomCoinGet = true;
         spawnEnemy = true;
+        opacity = 255;
+        if (stage != 3) gameState = runGame; 
+        else{
+            gameState = intro;
+            playButton.show();
+            shopButton.show();
+            controlsButton.show();
+            creditsButton.show();
+            backButton.show();
+        }
     }
 }
 
@@ -511,10 +542,10 @@ function gameOver(){
     fill('red');
     textAlign(CENTER);
     textSize(32);
-    text('Game Over!', windowWidth/2-15, windowHeight/2-10);
-    text("Press 'b' to continue", windowWidth/2-10, windowHeight/2+30);
+    text('Game Over!', 485, 340);
+    text("Press 'b' to continue", 490, 380);
     
-    if (kb.presses('b')){
+    if (kb.presses('b') || kb.presses('B')){
         gameState = intro;
         player.health = 5;
         player.x = 100;
@@ -523,15 +554,11 @@ function gameOver(){
         boss.health = 100;
         boss.x = 500;
         boss.y = 400;
-        box.x = 700;
-        box.y = 400;
-    }
-}
-
-function keyReleased(){
-    if (isWalking){
-        player.changeAni(`${currentCharacter}idle`);
-        isWalking = false;
+        playButton.show();
+        shopButton.show();
+        controlsButton.show();
+        creditsButton.show();
+        backButton.show();
     }
 }
 
