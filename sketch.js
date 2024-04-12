@@ -191,7 +191,7 @@ function setup(){
     enemies.collides(rocks, enemyHit);
     enemies.collides(player, playerHit);
 
-    boss = new Sprite(1100, 400, 54, 42);
+    boss = new Sprite(700, 150, 54, 42, 'static');
     boss.spriteSheet = bossImg;
     boss.scale *= 2;
     boss.health = 1;
@@ -208,6 +208,7 @@ function setup(){
         death: { row:9, frameSize: [96, 95.5], frames: 6 },
         idle: { row:0, frameSize: [96, 84], frames: 5 },
     });
+    boss.visible = false;
 
     boss.collides(rocks, enemyHit);
     boss.collides(player, playerHit);
@@ -236,6 +237,9 @@ function setup(){
     pinkButton = createButton('Equipped');
     owletButton = createButton('Buy');
     dudeButton = createButton('Buy');
+    pinkButton.hide();
+    owletButton.hide();
+    dudeButton.hide();
 
     backButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Home Square Button.png');
     backButton.size(50, 50);
@@ -243,25 +247,28 @@ function setup(){
 }
 
 function enemyHit(enemy, rock){
-    // boss is off screen, if rock hits boss and is not stage 3 do not consider
-    if (enemy.isBoss && stage != 3) return;
-
     rock.remove();
     enemy.health--;
 
-    if (enemy.health <= 0) enemy.remove();
+    if (enemy.health <= 0 && !enemy.isBoss) enemy.remove();
 }
+
+let playerHitCd = 0;
 
 function playerHit(enemy, player){
 
     if (!bossAttacking && enemy.isBoss) return;
 
-    player.changeAni(`${currentCharacter}hurt`);
-    player.health--;
-    if (player.health <= 0){
-        player.changeAni(`${currentCharacter}death`);
-        gameState = gameOver;
-    }}
+    if (playerHitCd == 0){
+        player.changeAni(`${currentCharacter}hurt`);
+        player.health--;
+        playerHitCd = 50;
+        if (player.health <= 0){
+            player.changeAni(`${currentCharacter}death`);
+            gameState = gameOver;
+        }
+    }
+}
 
 function draw(){
     clear();
@@ -397,8 +404,6 @@ let opacity = 255;
 let shootCd = 0;
 let shot = false;
 
-let x = false;
-
 function runGame(){
     drawBackground();
 
@@ -422,10 +427,7 @@ function runGame(){
     fill('blue');
     text(`Stage: ${stage} / 3`, 45, 70);
 
-    player.debug = mouse.pressing();
-    rocks.debug = mouse.pressing();
-    enemies.debug = mouse.pressing();
-    boss.debug = mouse.pressing();
+    allSprites.debug = mouse.pressing();
 
     if (stage != 3 && spawnEnemy){
         for (let i = 0; i < stage*5; i++){
@@ -436,9 +438,9 @@ function runGame(){
         }
         spawnEnemy = false;
     }else if (stage == 3 && spawnEnemy){
-        boss.x = 700;
-        boss.y = 500;
-        boss.vel.y = 0;
+        boss.y = 515;
+        boss.visible = true;
+        boss.collider = 'kinematic';
         spawnEnemy = false;
     }
 
@@ -466,17 +468,17 @@ function runGame(){
             boss.move('right', 2);
             boss.mirror.x = false;
         }
-    }
 
-    // change boss move on cd
-    if (changeMoveCd % 150 == 0){
-        let move = bossMoves[round(random(0, bossMoves.length-1))];
-        if (move.includes('atk')) bossAttacking = true;
-        else bossAttacking = false;
-        
-        boss.changeAni(move);
+        // change boss move on cd
+        if (changeMoveCd % 150 == 0){
+            let move = bossMoves[round(random(0, bossMoves.length-1))];
+            if (move.includes('atk')) bossAttacking = true;
+            else bossAttacking = false;
+            
+            boss.changeAni(move);
+        }
+        changeMoveCd += 1;
     }
-    changeMoveCd += 1;
 
     if (playerSensor.overlapping(floor)){
         if (kb.presses('w') || kb.presses('W')){
@@ -508,6 +510,8 @@ function runGame(){
             rocks.amount++;
             rocks[rocks.amount-1].image = rocksImg[round(random(0, rocksImg.length-1))];
             shot = true;
+            if (facing) rocks[rocks.amount-1].speed = 10;
+            else rocks[rocks.amount-1].speed = -10;
         }
         player.changeAni(`${currentCharacter}throw`);
     }
@@ -532,11 +536,11 @@ function runGame(){
     if (player.x < 20) player.x = 20;
     else if (player.x > 980) player.x = 980;
 
-    if (enemies.amount == 0 && stage != 3){
-        gameState = stageCompletion;
-    }else if (boss.health <= 0){
-        gameState = win;
-    }
+    if (enemies.amount == 0 && stage != 3) gameState = stageCompletion;
+    else if (boss.health <= 0) gameState = win;
+
+    if (playerHitCd != 0) playerHitCd--;
+    text(playerHitCd, 100, 100);
 
     allSprites.draw();
     allSprites.update();
@@ -562,15 +566,9 @@ function stageCompletion(){
         randomCoinGet = true;
         spawnEnemy = true;
         opacity = 255;
-        if (stage != 4) gameState = runGame; 
-        else{
-            gameState = intro;
-            playButton.show();
-            shopButton.show();
-            controlsButton.show();
-            creditsButton.show();
-            backButton.show();
-        }
+        player.x = 100;
+        player.y = 500;
+        gameState = runGame; 
     }
 }
 
@@ -605,18 +603,21 @@ function gameOver(){
     text('Game Over!', 485, 340);
     text("Press 'b' to continue", 490, 380);
     
-    if (kb.presses('b') || kb.presses('B'))restartGame();
+    if (kb.presses('b') || kb.presses('B')) restartGame();
 }
 
 function restartGame(){
     gameState = intro;
     player.health = 5;
     player.x = 100;
-    player.y = 400;
+    player.y = 500;
     stage = 1;
     boss.health = 100;
-    boss.x = 1100;
-    boss.y = 400;
+    boss.x = 700;
+    boss.y = 150;
+    bossAttacking = false;
+    boss.collider = 'static';
+    boss.visible = false;
     spawnEnemy = true;
     enemies.removeAll();
     playButton.show();
