@@ -11,6 +11,7 @@
  * 
  * Buttons:
  * https://nectanebo.itch.io/menu-buttons
+ * https://prinbles.itch.io/yet-another-icons
  * 
  * Key images:
  * https://illugion.itch.io/pixel-keyboard-lite
@@ -51,6 +52,11 @@ let gameState = intro;
 
 // home screen menu buttons
 let playButton, shopButton, controlsButton, creditsButton;
+
+let newGameButton;
+
+// settings screen button
+let settingsButton, closeButton, homeButton, musicOnButton, musicOffButton, newGameButtonSquare;
 
 // shop variables - buttons, if bought
 let pinkButton, owletButton, dudeButton;
@@ -219,7 +225,7 @@ function setup(){
     //intro
     playButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/Play Button.png');
     playButton.size(120, 50);
-    playButton.position(430, 310);
+    playButton.position(440, 310);
     
     shopButton = createImg('assets/Prinbles/Black-Icon/Cart.png');
     shopButton.size(50, 50);
@@ -227,7 +233,7 @@ function setup(){
 
     controlsButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/Controls Button.png');
     controlsButton.size(120, 50);
-    controlsButton.position(430, 370);
+    controlsButton.position(440, 370);
 
     creditsButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Info Square Button.png');
     creditsButton.size(50, 50);
@@ -244,6 +250,41 @@ function setup(){
     backButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Home Square Button.png');
     backButton.size(50, 50);
     backButton.position(930, 20);
+
+    newGameButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/New Game Button.png');
+    newGameButton.size(120, 50);
+    newGameButton.position(440, 410);
+    newGameButton.hide();
+
+    settingsButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Settings Square Button.png');
+    settingsButton.size(50, 50);
+    settingsButton.position(930, 20);
+    settingsButton.hide();
+
+    closeButton = createImg('assets/Prinbles/Black-Icon/Cross.png');
+    closeButton.size(25, 25);
+    closeButton.position(715, 185);
+    closeButton.hide();
+
+    homeButton = createImg('assets/Prinbles/Black-Icon/Home.png');
+    homeButton.size(100, 100);
+    homeButton.position(275, 300);
+    homeButton.hide();
+
+    musicOnButton = createImg('assets/Prinbles/Black-Icon/Music-On.png');
+    musicOnButton.size(100, 100);
+    musicOnButton.position(395, 300);
+    musicOnButton.hide();
+
+    musicOffButton = createImg('assets/Prinbles/Black-Icon/Music-Off.png');
+    musicOffButton.size(100, 100);
+    musicOffButton.position(515, 300);
+    musicOffButton.hide();
+
+    newGameButtonSquare = createImg('assets/Prinbles/Black-Icon/Play.png');
+    newGameButtonSquare.size(100, 100);
+    newGameButtonSquare.position(635, 300);
+    newGameButtonSquare.hide();
 }
 
 function enemyHit(enemy, rock){
@@ -289,7 +330,9 @@ function intro(){
         controlsButton.hide();
         creditsButton.hide();
         backButton.hide();
+        settingsButton.show();
         player.ani = `${currentCharacter}idle`;
+        opacity = 255;
     });
 
     controlsButton.mousePressed(() => {
@@ -403,14 +446,10 @@ function credits(){
 let opacity = 255;
 let shootCd = 0;
 let shot = false;
+let bossMove = true;
 
 function runGame(){
     drawBackground();
-
-    for (let i=0; i<player.health;i++){
-        image(heartImg, 5+(15*i), 5);
-        heartImg.resize(25,25);
-    }
 
     push();
         fill(255, opacity);
@@ -418,6 +457,11 @@ function runGame(){
         text(`Stage ${stage}`, 500, 200);
         if (opacity > 0) opacity -= 3;
     pop();
+
+    for (let i=0; i<player.health;i++){
+        image(heartImg, 5+(15*i), 5);
+        heartImg.resize(25,25);
+    }
 
     fill('white');
     image(coinImg, 5, 30);
@@ -461,20 +505,27 @@ function runGame(){
 
     // boss move towards player
     if (stage == 3){
-        if (player.x < boss.x){
-            boss.move('left', 2);
-            boss.mirror.x = true;
-        }else{
-            boss.move('right', 2);
-            boss.mirror.x = false;
+        if (bossMove){
+            if (player.x < boss.x){
+                boss.move('left', 2);
+                boss.mirror.x = true;
+            }else{
+                boss.move('right', 2);
+                boss.mirror.x = false;
+            }
         }
 
         // change boss move on cd
         if (changeMoveCd % 150 == 0){
             let move = bossMoves[round(random(0, bossMoves.length-1))];
-            if (move.includes('atk')) bossAttacking = true;
-            else bossAttacking = false;
-            
+            if (move.includes('atk')){
+                bossAttacking = true;
+                bossMove = true;
+            }else if (move.includes('angry') || move.includes('eyes')) bossMove = false;
+            else{
+                bossAttacking = false;
+                bossMove = true;
+            }
             boss.changeAni(move);
         }
         changeMoveCd += 1;
@@ -536,14 +587,107 @@ function runGame(){
     if (player.x < 20) player.x = 20;
     else if (player.x > 980) player.x = 980;
 
-    if (enemies.amount == 0 && stage != 3) gameState = stageCompletion;
-    else if (boss.health <= 0) gameState = win;
-
+    if (enemies.amount == 0 && stage != 3){
+        gameState = stageCompletion;
+        settingsButton.hide();
+    }else if (boss.health <= 0){
+        gameState = win;
+        newGameButton.show();
+        settingsButton.hide();
+    }
     if (playerHitCd != 0) playerHitCd--;
-    text(playerHitCd, 100, 100);
+
+    settingsButton.mousePressed(() => {
+        gameState = setting;
+        closeButton.show();
+        homeButton.show();
+        musicOnButton.show();
+        musicOffButton.show();
+        newGameButtonSquare.show();
+    });
 
     allSprites.draw();
     allSprites.update();
+}
+
+function setting(){
+    drawBackground();
+
+    push();
+        fill(255, opacity);
+        textSize(64);
+        text(`Stage ${stage}`, 500, 200);
+    pop();
+
+    push();
+        fill('white');
+        textSize(48);
+        text("Settings", 495, 250);
+    pop();
+
+    for (let i=0; i<player.health;i++){
+        image(heartImg, 5+(15*i), 5);
+        heartImg.resize(25,25);
+    }
+
+    fill('white');
+    image(coinImg, 5, 30);
+    coinImg.resize(20,20);
+    text(`${coins} coins`, 55, 47);
+
+    fill('blue');
+    text(`Stage: ${stage} / 3`, 45, 70);
+
+    fill(255, 100);
+    noStroke();
+    rect(250, 175, 500, 350);
+
+    closeButton.mousePressed(() => {
+        gameState = runGame;
+        closeButton.hide();
+        homeButton.hide();
+        musicOnButton.hide();
+        musicOffButton.hide();
+        newGameButtonSquare.hide();
+    });
+
+    homeButton.mousePressed(() => {
+        gameState = intro;
+        closeButton.hide();
+        homeButton.hide();
+        musicOnButton.hide();
+        musicOffButton.hide();
+        newGameButtonSquare.hide();
+        settingsButton.hide();
+        playButton.show();
+        shopButton.show();
+        controlsButton.show();
+        creditsButton.show();
+        backButton.show();
+    });
+
+    musicOnButton.mousePressed(() => {
+
+    });
+    
+    musicOffButton.mousePressed(() => {
+        
+    });
+
+    newGameButtonSquare.mousePressed(() => {
+        closeButton.hide();
+        homeButton.hide();
+        musicOnButton.hide();
+        musicOffButton.hide();
+        newGameButtonSquare.hide();
+        newGame = true;
+        restartGame();
+        gameState = runGame;
+        opacity = 255;
+        settingsButton.show();
+    });
+
+    allSprites.draw();
 }
 
 function stageCompletion(){
@@ -569,8 +713,11 @@ function stageCompletion(){
         player.x = 100;
         player.y = 500;
         gameState = runGame; 
+        settingsButton.show();
     }
 }
+
+let newGame = false;
 
 function win(){
     drawBackground();
@@ -584,8 +731,18 @@ function win(){
     textAlign(CENTER);
     textSize(32);
     text('Winner!', 500, 340);
-    text("Press 'b' to return to home screen", 470, 380);
+    text("Press 'b' to return to home screen", 500, 380);
     
+    newGameButton.mousePressed(() => {
+        coins += randomCoins;
+        newGame = true;
+        restartGame();
+        gameState = runGame;
+        opacity = 255;
+        newGameButton.hide();
+        settingsButton.show();
+    });
+
     if (kb.presses('b') || kb.presses('B')){
         coins += randomCoins;
         restartGame();
@@ -607,7 +764,6 @@ function gameOver(){
 }
 
 function restartGame(){
-    gameState = intro;
     player.health = 5;
     player.x = 100;
     player.y = 500;
@@ -620,11 +776,15 @@ function restartGame(){
     boss.visible = false;
     spawnEnemy = true;
     enemies.removeAll();
-    playButton.show();
-    shopButton.show();
-    controlsButton.show();
-    creditsButton.show();
-    backButton.show();
+
+    if (!newGame){
+        gameState = intro;
+        playButton.show();
+        shopButton.show();
+        controlsButton.show();
+        creditsButton.show();
+        backButton.show();
+    }
 }
 
 function drawBackground(){
