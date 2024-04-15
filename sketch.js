@@ -27,6 +27,8 @@ let timer = 1;
 // character variables
 // facing: direction false for left, true for right
 let facing = true;
+let isPunching = false;
+let isDoublePunching = false;
 
 // sprite objects
 let player, hand, rocks, floor, box;
@@ -94,10 +96,11 @@ let bossMoves = [
 ];
 let changeMoveCd = 0;
 
-let stage = 3;
+let stage = 1;
 
 // coins
 let coins = 0;
+let coinMultiplier = 1;
 let randomCoins;
 let randomCoinGet = true;
 
@@ -179,7 +182,7 @@ function setup(){
     rocks.x = () => hand.x;
     rocks.y = () => hand.y;
     rocks.speed = 10;
-    rocks.life = 200;
+    rocks.life = 100;
 
     hand = new Sprite();
     hand.diameter = 1;
@@ -191,7 +194,7 @@ function setup(){
 
     enemies = new Group();
     enemies.y = 540;
-    enemies.health = () => round(random(2));
+    enemies.health = () => round(random(10));
     enemies.isBoss = false;
 
     enemies.collides(rocks, enemyHit);
@@ -200,7 +203,7 @@ function setup(){
     boss = new Sprite(700, 150, 54, 42, 'static');
     boss.spriteSheet = bossImg;
     boss.scale *= 2;
-    boss.health = 1;
+    boss.health = 200;
     boss.isBoss = true;
     boss.addAnis({
         run: { row:1, frameSize: [96, 92], frames: 8 },
@@ -295,8 +298,16 @@ function enemyHit(enemy, rock){
 }
 
 let playerHitCd = 0;
+let enemyHitCd = 0;
 
 function playerHit(enemy, player){
+    if (isPunching && enemyHitCd == 0){
+        enemy.health -= 2;
+        enemyHitCd = 10;
+    }else if (isDoublePunching && enemyHitCd == 0){
+        enemy.health -= 3;
+        enemyHitCd = 10;
+    }
 
     if (!bossAttacking && enemy.isBoss) return;
 
@@ -320,6 +331,7 @@ function intro(){
     drawBackground();
 
     fill('white');
+    textAlign(CENTER);
     textSize(48);
     text("Monsters of the Devastation", 500, 250);
 
@@ -410,8 +422,9 @@ function shop(){
 
 function controls(){
     drawBackground();
-
+    
     fill('white');
+    textAlign(CENTER)
     textSize(32);
     text("Controls", 500, 50);
 
@@ -440,7 +453,6 @@ function credits(){
     Coin by @OZU\nhttps://osmanfrat.itch.io/coin\n \
     Buttons by @Nectanebo\nhttps://nectanebo.itch.io/menu-buttons\n \
     Keys by @illugion\nhttps://illugion.itch.io/pixel-keyboard-lite", 500, 125);
-
 }
 
 let opacity = 255;
@@ -451,12 +463,14 @@ let bossMove = true;
 function runGame(){
     drawBackground();
 
-    push();
-        fill(255, opacity);
-        textSize(64);
-        text(`Stage ${stage}`, 500, 200);
-        if (opacity > 0) opacity -= 3;
-    pop();
+    if (opacity > 0){
+        push();
+            fill(255, opacity);
+            textSize(64);
+            text(`Stage ${stage}`, 500, 200);
+            opacity -= 3;
+        pop();
+    }
 
     for (let i=0; i<player.health;i++){
         image(heartImg, 5+(15*i), 5);
@@ -471,17 +485,23 @@ function runGame(){
     fill('blue');
     text(`Stage: ${stage} / 3`, 45, 70);
 
-    allSprites.debug = mouse.pressing();
+    // allSprites.debug = mouse.pressing();
 
-    if (stage != 3 && spawnEnemy){
-        for (let i = 0; i < stage*5; i++){
+    if (spawnEnemy && stage != 3){
+        for (let i = 0; i < 4; i++){
             enemies.amount++;
             enemies[enemies.amount-1].ani = enemiesAni[round(random(0, enemiesAni.length-1))];
             enemies[enemies.amount-1].scale *= 3;
-            enemies[enemies.amount-1].x = 500 + (i*50);
+            if (stage == 2){
+                enemies[enemies.amount-1].x = 1000 + (i*50);
+                enemies.amount++;
+                enemies[enemies.amount-1].x = -(i*50);
+                enemies[enemies.amount-1].ani = enemiesAni[round(random(0, enemiesAni.length-1))];
+                enemies[enemies.amount-1].scale *= 3;
+            }else enemies[enemies.amount-1].x = 500 + (i*50);
         }
         spawnEnemy = false;
-    }else if (stage == 3 && spawnEnemy){
+    }else if (spawnEnemy && stage == 3){
         boss.y = 515;
         boss.visible = true;
         boss.collider = 'kinematic';
@@ -554,8 +574,12 @@ function runGame(){
 
     if (kb.pressing('j') || kb.pressing('J')){
         player.changeAni(`${currentCharacter}atk1`);
+        isPunching = true;
+        isDoublePunching = false;
     }else if (kb.pressing('k') || kb.pressing('K')){
         player.changeAni(`${currentCharacter}atk2`);
+        isDoublePunching = true;
+        isPunching = false;
     }else if (kb.pressing('l') || kb.pressing('L')){
         if (!shot){
             rocks.amount++;
@@ -565,6 +589,11 @@ function runGame(){
             else rocks[rocks.amount-1].speed = -10;
         }
         player.changeAni(`${currentCharacter}throw`);
+        isPunching = false;
+        isDoublePunching = false;
+    }else{
+        isPunching = false;
+        isDoublePunching = false;
     }
 
     if (shot) shootCd += 1;
@@ -573,19 +602,12 @@ function runGame(){
         shootCd = 0;
     }
 
-    if (kb.presses('e') || kb.presses('E')){
-        enemies.amount++;
-        enemies[enemies.amount-1].ani = enemiesAni[round(random(0, enemiesAni.length-1))];
-        enemies[enemies.amount-1].scale *= 3;
-    }
-
     if (facing) hand.x = player.x+35;
     else hand.x = player.x-35;
     hand.y = player.y;
 
-    // player cannot go pass screen size
-    if (player.x < 20) player.x = 20;
-    else if (player.x > 980) player.x = 980;
+    if (player.x < -20) player.x = 980;
+    else if (player.x > 1020) player.x = 20;
 
     if (enemies.amount == 0 && stage != 3){
         gameState = stageCompletion;
@@ -596,6 +618,7 @@ function runGame(){
         settingsButton.hide();
     }
     if (playerHitCd != 0) playerHitCd--;
+    if (enemyHitCd != 0) enemyHitCd--;
 
     settingsButton.mousePressed(() => {
         gameState = setting;
@@ -613,11 +636,15 @@ function runGame(){
 function setting(){
     drawBackground();
 
-    push();
-        fill(255, opacity);
-        textSize(64);
-        text(`Stage ${stage}`, 500, 200);
-    pop();
+    allSprites.draw();
+
+    if (opacity > 0){
+        push();
+            fill(255, opacity);
+            textSize(64);
+            text(`Stage ${stage}`, 500, 200);
+        pop();
+    }
 
     push();
         fill('white');
@@ -649,6 +676,9 @@ function setting(){
         musicOnButton.hide();
         musicOffButton.hide();
         newGameButtonSquare.hide();
+        if (player.health <= 0){
+            gameState = gameOver;
+        }
     });
 
     homeButton.mousePressed(() => {
@@ -686,34 +716,49 @@ function setting(){
         opacity = 255;
         settingsButton.show();
     });
-
-    allSprites.draw();
 }
+
+let powerups = [
+    "Doubled Coins",
+    "Heal 1 Heart",
+];
+let foundPowerup = false;
+let powerup;
 
 function stageCompletion(){
     drawBackground();
-
+    
     if (randomCoinGet){
-        randomCoins = round(random(5,10))*stage;
+        randomCoins = round(random(5,10))*stage*coinMultiplier;
         randomCoinGet = false;
+    }
+
+    if (!foundPowerup){
+        powerup = powerups[round(random(powerups.length-1))];
+        foundPowerup = true;
     }
     fill('white');
     textAlign(CENTER);
     textSize(32);
-    text(`You found ${randomCoins}`, 460, 320);
-    text("Press 'b' to continue", 460, 380);
-    text("Power-ups found", 470, 440);
+    text(`You found ${randomCoins}`, 500, 320);
+    text("Press 'b' to continue", 500, 380);
+    text(`${powerup}`, 500, 440);
 
     if (kb.presses('b') || kb.presses('B')){
+        if (powerup == "Heal 1 Heart") player.health++;
+        else coinMultiplier = 2;
         coins += randomCoins;
+        foundPowerup = false;
         stage++;
         randomCoinGet = true;
         spawnEnemy = true;
         opacity = 255;
-        player.x = 100;
+        if (stage == 2) player.x = 500;
+        else player.x = 100;
         player.y = 500;
         gameState = runGame; 
         settingsButton.show();
+        rocks.removeAll();
     }
 }
 
@@ -757,18 +802,19 @@ function gameOver(){
     fill('red');
     textAlign(CENTER);
     textSize(32);
-    text('Game Over!', 485, 340);
-    text("Press 'b' to continue", 490, 380);
+    text('Game Over!', 500, 340);
+    text("Press 'b' to continue", 500, 380);
     
     if (kb.presses('b') || kb.presses('B')) restartGame();
 }
 
 function restartGame(){
+    coinMultiplier = 1;
     player.health = 5;
     player.x = 100;
     player.y = 500;
     stage = 1;
-    boss.health = 100;
+    boss.health = 200;
     boss.x = 700;
     boss.y = 150;
     bossAttacking = false;
@@ -817,7 +863,6 @@ function drawBackground(){
     }
 
     fill('green');
-    textAlign(CENTER);
     textSize(16);
     text(`${fps} fps`, 950, 15);
 
