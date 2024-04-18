@@ -40,6 +40,9 @@ let characters = ['Pink_Monster', 'Owlet_Monster', 'Dude_Monster'];
 let rascals, abomination, imp, blackguard, demom, eye, gouger, gremlin, scamp, balor, demonspawn, demonling, stalker, scoundrel;
 let enemiesAni = [];
 
+// sensors
+let playerSensor;
+
 // image objects
 let rock1Img, rock2Img;
 let rocksImg = [];
@@ -81,7 +84,6 @@ let keysInfo = [
 // enemy variables
 // let enemyHealthWidth;
 let spawnEnemy = true;
-let amountOfEnemies = 10;
 let bossAttacking = false;
 let bossMoves = [
     'idle',
@@ -187,8 +189,9 @@ function setup(){
     hand = new Sprite();
     hand.diameter = 1;
     hand.collider = 'None';
+    hand.visible = false;
 
-    floor = new Sprite(500, 565, 1000, 10, 'static');
+    floor = new Sprite(500, 565, 1300, 10, 'static');
 	floor.color = color(255, 0, 0, 0);
 	floor.stroke = color(255, 0, 0, 0);
 
@@ -256,7 +259,7 @@ function setup(){
 
     newGameButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/New Game Button.png');
     newGameButton.size(120, 50);
-    newGameButton.position(440, 410);
+    newGameButton.position(440, 370);
     newGameButton.hide();
 
     settingsButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Settings Square Button.png');
@@ -312,12 +315,11 @@ function playerHit(enemy, player){
     if (!bossAttacking && enemy.isBoss) return;
 
     if (playerHitCd == 0){
-        player.changeAni(`${currentCharacter}hurt`);
         player.health--;
-        playerHitCd = 50;
+        playerHitCd = 30;
         if (player.health <= 0){
-            player.changeAni(`${currentCharacter}death`);
-            gameState = gameOver;
+            gameState = death;
+            boss.speed = 0;
         }
     }
 }
@@ -458,7 +460,8 @@ function credits(){
 let opacity = 255;
 let shootCd = 0;
 let shot = false;
-let bossMove = true;
+let bossSpeed = 2;
+let move;
 
 function runGame(){
     drawBackground();
@@ -525,26 +528,27 @@ function runGame(){
 
     // boss move towards player
     if (stage == 3){
-        if (bossMove){
-            if (player.x < boss.x){
-                boss.move('left', 2);
-                boss.mirror.x = true;
-            }else{
-                boss.move('right', 2);
-                boss.mirror.x = false;
-            }
+        if (player.x < boss.x){
+            boss.direction = 'left';
+            boss.mirror.x = true;
+        }else{
+            boss.direction = 'right';
+            boss.mirror.x = false;
         }
+        boss.speed = bossSpeed;
 
         // change boss move on cd
         if (changeMoveCd % 150 == 0){
-            let move = bossMoves[round(random(0, bossMoves.length-1))];
+            move = bossMoves[round(random(0, bossMoves.length-1))];
             if (move.includes('atk')){
                 bossAttacking = true;
-                bossMove = true;
-            }else if (move.includes('angry') || move.includes('eyes')) bossMove = false;
-            else{
+                bossSpeed = 1;
+            }else if (move .includes('run')){
                 bossAttacking = false;
-                bossMove = true;
+                bossSpeed = 2;
+            }else{
+                bossAttacking = false;
+                bossSpeed = 0;
             }
             boss.changeAni(move);
         }
@@ -571,6 +575,10 @@ function runGame(){
     }else{
         if (player.vel.y == 0) player.changeAni(`${currentCharacter}idle`);
     }
+
+    if (facing) hand.x = player.x+25;
+    else hand.x = player.x-25;
+    hand.y = player.y;
 
     if (kb.pressing('j') || kb.pressing('J')){
         player.changeAni(`${currentCharacter}atk1`);
@@ -602,10 +610,6 @@ function runGame(){
         shootCd = 0;
     }
 
-    if (facing) hand.x = player.x+35;
-    else hand.x = player.x-35;
-    hand.y = player.y;
-
     if (player.x < -20) player.x = 980;
     else if (player.x > 1020) player.x = 20;
 
@@ -613,15 +617,19 @@ function runGame(){
         gameState = stageCompletion;
         settingsButton.hide();
     }else if (boss.health <= 0){
-        gameState = win;
-        newGameButton.show();
-        settingsButton.hide();
+        gameState = death;
+        boss.speed = 0;
     }
-    if (playerHitCd != 0) playerHitCd--;
+    if (playerHitCd != 0){
+        playerHitCd--;
+        player.changeAni(`${currentCharacter}hurt`);
+    }
+
     if (enemyHitCd != 0) enemyHitCd--;
 
     settingsButton.mousePressed(() => {
         gameState = setting;
+        boss.speed = 0;
         closeButton.show();
         homeButton.show();
         musicOnButton.show();
@@ -631,6 +639,50 @@ function runGame(){
 
     allSprites.draw();
     allSprites.update();
+}
+
+function death(){
+    drawBackground();
+
+    allSprites.draw();
+
+    for (let i=0; i<player.health;i++){
+        image(heartImg, 5+(15*i), 5);
+        heartImg.resize(25,25);
+    }
+
+    fill('white');
+    image(coinImg, 5, 30);
+    coinImg.resize(20,20);
+    text(`${coins} coins`, 55, 47);
+
+    fill('blue');
+    text(`Stage: ${stage} / 3`, 45, 70);
+
+    if (boss.health <= 0){
+        boss.changeAni('death');
+        boss.ani.frameDelay = 10;
+        boss.update();
+
+        if (boss.ani.frame == boss.ani.lastFrame){
+            gameState = win;
+            boss.ani.frameDelay = 4;
+            newGameButton.show();
+            settingsButton.hide();
+        }
+    }else if (player.health <= 0){
+        player.changeAni(`${currentCharacter}death`);
+        player.update();
+        player.ani.frameDelay = 10;
+
+        if (player.ani.frame == player.ani.lastFrame){
+            gameState = win;
+            player.ani.frameDelay = 4;
+            newGameButton.show();
+            settingsButton.hide();
+        }
+    }
+
 }
 
 function setting(){
@@ -676,9 +728,7 @@ function setting(){
         musicOnButton.hide();
         musicOffButton.hide();
         newGameButtonSquare.hide();
-        if (player.health <= 0){
-            gameState = gameOver;
-        }
+        if (player.health <= 0) gameState = gameOver;
     });
 
     homeButton.mousePressed(() => {
@@ -742,7 +792,7 @@ function stageCompletion(){
     textSize(32);
     text(`You found ${randomCoins}`, 500, 320);
     text("Press 'b' to continue", 500, 380);
-    text(`${powerup}`, 500, 440);
+    text(`PowerUp: ${powerup}`, 500, 440);
 
     if (kb.presses('b') || kb.presses('B')){
         if (powerup == "Heal 1 Heart") player.health++;
@@ -775,8 +825,8 @@ function win(){
     fill('red');
     textAlign(CENTER);
     textSize(32);
-    text('Winner!', 500, 340);
-    text("Press 'b' to return to home screen", 500, 380);
+    text('Winner!', 500, 300);
+    text("Press 'b' to return to home screen", 500, 340);
     
     newGameButton.mousePressed(() => {
         coins += randomCoins;
@@ -802,8 +852,8 @@ function gameOver(){
     fill('red');
     textAlign(CENTER);
     textSize(32);
-    text('Game Over!', 500, 340);
-    text("Press 'b' to continue", 500, 380);
+    text('Game Over!', 500, 300);
+    text("Press 'b' to continue", 500, 340);
     
     if (kb.presses('b') || kb.presses('B')) restartGame();
 }
