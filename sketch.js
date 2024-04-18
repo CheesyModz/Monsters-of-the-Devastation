@@ -37,14 +37,12 @@ let currentCharacter = 'Pink_Monster';
 let characters = ['Pink_Monster', 'Owlet_Monster', 'Dude_Monster'];
 
 // sprite enemy objects
-let rascals, abomination, imp, blackguard, demom, eye, gouger, gremlin, scamp, balor, demonspawn, demonling, stalker, scoundrel;
 let enemiesAni = [];
 
 // sensors
 let playerSensor;
 
 // image objects
-let rock1Img, rock2Img;
 let rocksImg = [];
 let boss, bossImg, coinImg, heartImg, pinkMonster, owletMonster, dudeMonster;
 
@@ -82,7 +80,6 @@ let keysInfo = [
 ];
 
 // enemy variables
-// let enemyHealthWidth;
 let spawnEnemy = true;
 let bossAttacking = false;
 let bossMoves = [
@@ -97,6 +94,7 @@ let bossMoves = [
     'atk3'
 ];
 let changeMoveCd = 0;
+let tempBossSpeed;
 
 let stage = 1;
 
@@ -107,25 +105,27 @@ let randomCoins;
 let randomCoinGet = true;
 
 function preload(){
-    rock1Img = loadImage("assets/Pink_Monster/Rock1.png");
-    rock2Img = loadImage("assets/Pink_Monster/Rock2.png");
-    rocksImg = [rock1Img, rock2Img];
+    rocksImg = [
+        loadImage("assets/Pink_Monster/Rock1.png"),
+        loadImage("assets/Pink_Monster/Rock2.png")
+    ];
 
-    rascals = loadAnimation('assets/Basic Demon/antlered rascal/AntleredRascal.png', { frameSize: [16, 16], frames: 4 });
-    abomination = loadAnimation('assets/Basic Demon/clawed abomination/ClawedAbomination.png', { frameSize: [16, 16], frames: 4 });
-    imp = loadAnimation('assets/Basic Demon/crimson imp/CrimsonImp.png', { frameSize: [16, 16], frames: 4 });
-    blackguard = loadAnimation('assets/Basic Demon/depraved blackguard/DepravedBlackguard.png', { frameSize: [16, 16], frames: 4 });
-    demom = loadAnimation('assets/Basic Demon/fledgling demon/FledglingDemon.png', { frameSize: [16, 16], frames: 4 });
-    eye = loadAnimation('assets/Basic Demon/floating eye/FloatingEye.png', { frameSize: [16, 16], frames: 4 });
-    gouger = loadAnimation('assets/Basic Demon/foul gouger/FoulGouger.png', { frameSize: [16, 16], frames: 4 });
-    gremlin = loadAnimation('assets/Basic Demon/grinning gremlin/GrinningGremlin.png', { frameSize: [16, 16], frames: 4 });
-    scamp = loadAnimation('assets/Basic Demon/nefarious scamp/NefariousScamp.png', { frameSize: [16, 16], frames: 4 });
-    balor = loadAnimation('assets/Basic Demon/pit balor/PitBalor.png', { frameSize: [16, 16], frames: 4 });
-    demonspawn = loadAnimation('assets/Basic Demon/pointed demonspawn/PointedDemonspawn.png', { frameSize: [16, 16], frames: 4 });
-    demonling = loadAnimation('assets/Basic Demon/rascally demonling/RascallyDemonling.png', { frameSize: [16, 16], frames: 4 });
-    stalker = loadAnimation('assets/Basic Demon/tainted scoundrel/TaintedScoundrel.png', { frameSize: [16, 16], frames: 4 });
-    scoundrel = loadAnimation('assets/Basic Demon/warp skull/WarpSkull.png', { frameSize: [16, 16], frames: 4 });
-    enemiesAni = [rascals, abomination, imp, blackguard, demom, eye, gouger, gremlin, scamp, balor, demonspawn, demonling, stalker, scoundrel];
+    enemiesAni = [
+        loadAnimation('assets/Basic Demon/antlered rascal/AntleredRascal.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/clawed abomination/ClawedAbomination.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/crimson imp/CrimsonImp.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/depraved blackguard/DepravedBlackguard.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/fledgling demon/FledglingDemon.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/floating eye/FloatingEye.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/foul gouger/FoulGouger.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/grinning gremlin/GrinningGremlin.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/nefarious scamp/NefariousScamp.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/pit balor/PitBalor.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/pointed demonspawn/PointedDemonspawn.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/rascally demonling/RascallyDemonling.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/tainted scoundrel/TaintedScoundrel.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/warp skull/WarpSkull.png', { frameSize: [16, 16], frames: 4 })
+    ];
 
     bossImg = loadImage('assets/Minotaur - Sprite Sheet.png');
     heartImg = loadImage('assets/heart.png');
@@ -141,12 +141,14 @@ function preload(){
     owletMonster = loadImage('assets/Owlet_Monster/Owlet_Monster.png');
     dudeMonster = loadImage('assets/Dude_Monster/Dude_Monster.png');
 
-    keysImgs.push(loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_w.png'));
-    keysImgs.push(loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_a.png'));
-    keysImgs.push(loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_d.png'));
-    keysImgs.push(loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_j.png'));
-    keysImgs.push(loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_k.png'));
-    keysImgs.push(loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_l.png'));
+    keysImgs = [
+        loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_w.png'),
+        loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_a.png'),
+        loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_d.png'),
+        loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_j.png'),
+        loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_k.png'),
+        loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_l.png')
+    ];
 }
 
 function setup(){
@@ -170,12 +172,7 @@ function setup(){
         player.addAni(`${character}idle`, `assets/${character}/${character}_Idle_4.png`, { frameSize: [32, 32], frames: 4 });
     }
 
-    playerSensor = new Sprite();
-    playerSensor.x = player.x;
-    playerSensor.y = player.y + 5;
-    playerSensor.w = 50;
-    playerSensor.h = 60;
-    playerSensor.collider = 'none';
+    playerSensor = new Sprite(player.x, player.y+5, 50, 60, 'none');
     playerSensor.visible = false;
 
     new GlueJoint(player, playerSensor);
@@ -229,68 +226,178 @@ function setup(){
     allSprites.autoUpdate = false;
 
     //intro
-    playButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/Play Button.png');
-    playButton.size(120, 50);
-    playButton.position(440, 310);
-    
-    shopButton = createImg('assets/Prinbles/Black-Icon/Cart.png');
-    shopButton.size(50, 50);
-    shopButton.position(875, 20);
-
-    controlsButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/Controls Button.png');
-    controlsButton.size(120, 50);
-    controlsButton.position(440, 370);
-
-    creditsButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Info Square Button.png');
-    creditsButton.size(50, 50);
-    creditsButton.position(820, 20);
+    playButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/Play Button.png')
+        .size(120, 50)
+        .position(440, 310)
+        .mousePressed(() => {
+            gameState = runGame;
+            player.ani = `${currentCharacter}idle`;
+            opacity = 255;
+            leaveIntro();
+            shopButton.hide();
+            creditsButton.hide();
+            backButton.hide();
+            settingsButton.show();
+        });
+    shopButton = createImg('assets/Prinbles/Black-Icon/Cart.png')
+        .size(50, 50)
+        .position(875, 20)
+        .mousePressed(() => {
+            if (gameState == intro) leaveIntro();
+            gameState = shop;
+        })
+    controlsButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/Controls Button.png')
+        .size(120, 50)
+        .position(440, 370)
+        .mousePressed(() => {
+            leaveIntro();
+            gameState = controls;
+        });
+    creditsButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Info Square Button.png')
+        .size(50, 50)
+        .position(820, 20)
+        .mousePressed(() => {
+            if (gameState == intro) leaveIntro();
+            else if (gameState == shop) leaveShop();
+            gameState = credits;
+        })
 
     //shop
-    pinkButton = createButton('Equipped');
-    owletButton = createButton('Buy');
-    dudeButton = createButton('Buy');
-    pinkButton.hide();
-    owletButton.hide();
-    dudeButton.hide();
+    pinkButton = createButton('Equipped')
+        .hide()
+        .position(215, 370)
+        .mousePressed(() => {
+        if (currentCharacter != 'Pink_Monster'){
+            currentCharacter = 'Pink_Monster';
+            pinkButton.html('Equipped');
+        }
+    });
+    owletButton = createButton('Buy')
+        .hide()
+        .position(485, 370)
+        .mousePressed(() => {
+        if (coins >= 50 && !owletBuy && currentCharacter != 'Owlet_Monster'){
+            coins -= 50;
+            owletBuy = true;
+            currentCharacter = 'Owlet_Monster';
+            owletButton.html('Equipped');
+        }else if (owletBuy){
+            owletButton.html('Equipped');
+            currentCharacter = 'Owlet_Monster';
+        }
+    });
+    dudeButton = createButton('Buy')
+        .hide()
+        .position(745, 370)
+        .mousePressed(() => {
+        if (coins >= 100 && !dudeBuy && currentCharacter != 'Dude_Monster'){
+            coins -= 100;
+            dudeBuy = true;
+            currentCharacter = 'Dude_Monster';
+            dudeButton.html('Equipped');
+        }else if (dudeBuy){
+            dudeButton.html('Equipped');
+            currentCharacter = 'Dude_Monster';
+        }
+    });
 
-    backButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Home Square Button.png');
-    backButton.size(50, 50);
-    backButton.position(930, 20);
+    backButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Home Square Button.png')
+        .size(50, 50)
+        .position(930, 20)
+        .mousePressed(() => {
+            if (gameState == shop) leaveShop();
+            gameState = intro;
+        })
+    newGameButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/New Game Button.png')
+        .hide()
+        .size(120, 50)
+        .position(440, 370)
+        .mousePressed(() => {
+            if (gameState == win) coins += randomCoins;
+            newGame = true;
+            restartGame();
+            gameState = runGame;
+            opacity = 255;
+            newGameButton.hide();
+            settingsButton.show();
+        });
 
-    newGameButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/New Game Button.png');
-    newGameButton.size(120, 50);
-    newGameButton.position(440, 370);
-    newGameButton.hide();
+    //settings buttons
+    settingsButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Settings Square Button.png')
+        .size(50, 50)
+        .position(930, 20)
+        .hide()
+        .mousePressed(() => {
+            gameState = setting;
+            tempBossSpeed = boss.speed;
+            boss.speed = 0;
+            closeButton.show();
+            homeButton.show();
+            musicOnButton.show();
+            musicOffButton.show();
+            newGameButtonSquare.show();
+        });
+    closeButton = createImg('assets/Prinbles/Black-Icon/Cross.png')
+        .size(25, 25)
+        .position(715, 185)
+        .hide()
+        .mousePressed(() => {
+            gameState = runGame;
+            leaveSettings();
+            boss.speed = tempBossSpeed;
+            if (player.health <= 0) gameState = gameOver;
+        });
+    homeButton = createImg('assets/Prinbles/Black-Icon/Home.png')
+        .size(100, 100)
+        .position(275, 300)
+        .hide()
+        .mousePressed(() => {
+            restartGame();
+            gameState = intro;
+            leaveSettings();
+            settingsButton.hide();
+        });
+    musicOnButton = createImg('assets/Prinbles/Black-Icon/Music-On.png')
+        .size(100, 100)
+        .position(395, 300)
+        .hide()
+        .mousePressed(() => {
 
-    settingsButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Settings Square Button.png');
-    settingsButton.size(50, 50);
-    settingsButton.position(930, 20);
-    settingsButton.hide();
+        });
 
-    closeButton = createImg('assets/Prinbles/Black-Icon/Cross.png');
-    closeButton.size(25, 25);
-    closeButton.position(715, 185);
-    closeButton.hide();
+    musicOffButton = createImg('assets/Prinbles/Black-Icon/Music-Off.png')
+        .size(100, 100)
+        .position(515, 300)
+        .hide()
+        .mousePressed(() => {
 
-    homeButton = createImg('assets/Prinbles/Black-Icon/Home.png');
-    homeButton.size(100, 100);
-    homeButton.position(275, 300);
-    homeButton.hide();
+        });
 
-    musicOnButton = createImg('assets/Prinbles/Black-Icon/Music-On.png');
-    musicOnButton.size(100, 100);
-    musicOnButton.position(395, 300);
-    musicOnButton.hide();
+    newGameButtonSquare = createImg('assets/Prinbles/Black-Icon/Play.png')
+        .size(100, 100)
+        .position(635, 300)
+        .hide()
+        .mousePressed(() => {
+            leaveSettings();
+            newGame = true;
+            restartGame();
+            gameState = runGame;
+            opacity = 255;
+            settingsButton.show();
+        });
 
-    musicOffButton = createImg('assets/Prinbles/Black-Icon/Music-Off.png');
-    musicOffButton.size(100, 100);
-    musicOffButton.position(515, 300);
-    musicOffButton.hide();
-
-    newGameButtonSquare = createImg('assets/Prinbles/Black-Icon/Play.png');
-    newGameButtonSquare.size(100, 100);
-    newGameButtonSquare.position(635, 300);
-    newGameButtonSquare.hide();
+    //resize images
+    coinImg.resize(20,20);
+    heartImg.resize(25,25);
+    pinkMonster.resize(100, 100);
+    owletMonster.resize(100, 100);
+    dudeMonster.resize(100, 100);
+    for (let i = 0; i < keysImgs.length; i++) keysImgs[i].resize(50, 50);
+    sky.resize(1000, 700);
+    downLayer.resize(1000, 700);
+    middleLayer.resize(1000, 700);
+    topLayer.resize(1000, 700);
+    light.resize(1000, 700);
 }
 
 function enemyHit(enemy, rock){
@@ -329,40 +436,43 @@ function draw(){
     gameState();
 }
 
+let enter = true;
+
 function intro(){
     drawBackground();
+
+    if (enter){
+        playButton.show();
+        shopButton.show();
+        controlsButton.show();
+        creditsButton.show();
+        backButton.show();
+        enter = false;
+    }
 
     fill('white');
     textAlign(CENTER);
     textSize(48);
     text("Monsters of the Devastation", 500, 250);
+}
 
-    playButton.mousePressed(() => {
-        gameState = runGame;
-        playButton.hide();
-        shopButton.hide();
-        controlsButton.hide();
-        creditsButton.hide();
-        backButton.hide();
-        settingsButton.show();
-        player.ani = `${currentCharacter}idle`;
-        opacity = 255;
-    });
-
-    controlsButton.mousePressed(() => {
-        gameState = controls;
-        playButton.hide();
-        controlsButton.hide();
-    });
-
+function leaveIntro(){
+    enter = true;
+    playButton.hide();
+    controlsButton.hide();
 }
 
 function shop(){
     drawBackground();
 
-    fill('white');
+    if (enter){
+        pinkButton.show();
+        owletButton.show();
+        dudeButton.show();
+        enter = false;
+    }
+
     image(coinImg, 5, 10);
-    coinImg.resize(20,20);
     text(`${coins} coins`, 60, 27);
 
     textSize(32);
@@ -371,10 +481,6 @@ function shop(){
     image(pinkMonster, 210, 250);
     image(owletMonster, 460, 250);
     image(dudeMonster, 710, 250);
-
-    pinkMonster.resize(100, 100);
-    owletMonster.resize(100, 100);
-    dudeMonster.resize(100, 100);
 
     textSize(16);
     image(coinImg, 230, 230);
@@ -385,66 +491,35 @@ function shop(){
     text('100',  770, 245);
 
     if (currentCharacter != 'Pink_Monster') pinkButton.html('Equip');
-    pinkButton.position(215, 370);
-    pinkButton.mousePressed(() => {
-        if (currentCharacter != 'Pink_Monster'){
-            currentCharacter = 'Pink_Monster';
-            pinkButton.html('Equipped');
-        }
-    });
-
     if (owletBuy && currentCharacter != 'Owlet_Monster') owletButton.html('Equip');
-    owletButton.position(485, 370);
-    owletButton.mousePressed(() => {
-        if (coins >= 50 && !owletBuy && currentCharacter != 'Owlet_Monster'){
-            coins -= 50;
-            owletBuy = true;
-            currentCharacter = 'Owlet_Monster';
-            owletButton.html('Equipped')
-        }else if (owletBuy){
-            owletButton.html('Equipped')
-            currentCharacter = 'Owlet_Monster';
-        }
-    });
-
     if (dudeBuy && currentCharacter != 'Dude_Monster') dudeButton.html('Equip');
-    dudeButton.position(745, 370);
-    dudeButton.mousePressed(() => {
-        if (coins >= 100 && !dudeBuy && currentCharacter != 'Dude_Monster'){
-            coins -= 100;
-            dudeBuy = true;
-            currentCharacter = 'Dude_Monster';
-            dudeButton.html('Equipped')
-        }else if (dudeBuy){
-            dudeButton.html('Equipped')
-            currentCharacter = 'Dude_Monster';
-        }
-    });
+}
+
+function leaveShop(){
+    enter = true;
+    pinkButton.hide();
+    owletButton.hide();
+    dudeButton.hide();
 }
 
 function controls(){
     drawBackground();
-    
-    fill('white');
+
     textAlign(CENTER)
     textSize(32);
     text("Controls", 500, 50);
 
-    textSize(32);
     textAlign(LEFT);
     for (let i = 0; i < keysImgs.length; i++){
-        keysImgs[i].resize(50, 50);
         image(keysImgs[i], 300, 90*(i+1));
         text(keysInfo[i], 360, 30+90*(i+1));
     }
-
 }
 
 function credits(){
     drawBackground();
 
-    fill('white');
-
+    textAlign(CENTER);
     textSize(24);
     text("Author: Gary Huang\n \
     Characters by @Free Game Assets(GUI, Sprite, Tilesets)\nhttps://free-game-assets.itch.io/free-tiny-hero-sprites-pixel-art\n \
@@ -460,7 +535,6 @@ function credits(){
 let opacity = 255;
 let shootCd = 0;
 let shot = false;
-let bossSpeed = 2;
 let move;
 
 function runGame(){
@@ -475,33 +549,38 @@ function runGame(){
         pop();
     }
 
-    for (let i=0; i<player.health;i++){
-        image(heartImg, 5+(15*i), 5);
-        heartImg.resize(25,25);
-    }
+    for (let i=0; i<player.health;i++) image(heartImg, 5+(15*i), 5);
 
     fill('white');
+    textSize(16);
     image(coinImg, 5, 30);
-    coinImg.resize(20,20);
     text(`${coins} coins`, 55, 47);
 
-    fill('blue');
-    text(`Stage: ${stage} / 3`, 45, 70);
+    push();
+        fill('blue');
+        text(`Stage: ${stage} / 3`, 45, 70);
+    pop();
 
     // allSprites.debug = mouse.pressing();
 
-    if (spawnEnemy && stage != 3){
+    if (spawnEnemy && stage == 1){
         for (let i = 0; i < 4; i++){
             enemies.amount++;
             enemies[enemies.amount-1].ani = enemiesAni[round(random(0, enemiesAni.length-1))];
             enemies[enemies.amount-1].scale *= 3;
-            if (stage == 2){
-                enemies[enemies.amount-1].x = 1000 + (i*50);
-                enemies.amount++;
-                enemies[enemies.amount-1].x = -(i*50);
-                enemies[enemies.amount-1].ani = enemiesAni[round(random(0, enemiesAni.length-1))];
-                enemies[enemies.amount-1].scale *= 3;
-            }else enemies[enemies.amount-1].x = 500 + (i*50);
+            enemies[enemies.amount-1].x = 500 + (i*50);
+        }
+        spawnEnemy = false;
+    }else if (spawnEnemy && stage == 2){
+        for (let i = 0; i < 4; i++){
+            enemies.amount++;
+            enemies[enemies.amount-1].ani = enemiesAni[round(random(0, enemiesAni.length-1))];
+            enemies[enemies.amount-1].scale *= 3;
+            enemies[enemies.amount-1].x = 1000 + (i*50);
+            enemies.amount++;
+            enemies[enemies.amount-1].x = -(i*50);
+            enemies[enemies.amount-1].ani = enemiesAni[round(random(0, enemiesAni.length-1))];
+            enemies[enemies.amount-1].scale *= 3;
         }
         spawnEnemy = false;
     }else if (spawnEnemy && stage == 3){
@@ -510,10 +589,6 @@ function runGame(){
         boss.collider = 'kinematic';
         spawnEnemy = false;
     }
-
-    // boss will face character
-    if (player.x < boss.x) boss.mirror.x = true;
-    else boss.mirror.x = false;
 
     // enemies will go towards character
     for (let i = 0; i < enemies.length; i++){
@@ -528,6 +603,10 @@ function runGame(){
 
     // boss move towards player
     if (stage == 3){
+        // boss will face character
+        if (player.x < boss.x) boss.mirror.x = true;
+        else boss.mirror.x = false;
+
         if (player.x < boss.x){
             boss.direction = 'left';
             boss.mirror.x = true;
@@ -535,20 +614,19 @@ function runGame(){
             boss.direction = 'right';
             boss.mirror.x = false;
         }
-        boss.speed = bossSpeed;
 
         // change boss move on cd
         if (changeMoveCd % 150 == 0){
             move = bossMoves[round(random(0, bossMoves.length-1))];
             if (move.includes('atk')){
                 bossAttacking = true;
-                bossSpeed = 1;
+                boss.speed = 1;
             }else if (move .includes('run')){
                 bossAttacking = false;
-                bossSpeed = 2;
+                boss.speed = 2;
             }else{
                 bossAttacking = false;
-                bossSpeed = 0;
+                boss.speed = 0;
             }
             boss.changeAni(move);
         }
@@ -627,16 +705,6 @@ function runGame(){
 
     if (enemyHitCd != 0) enemyHitCd--;
 
-    settingsButton.mousePressed(() => {
-        gameState = setting;
-        boss.speed = 0;
-        closeButton.show();
-        homeButton.show();
-        musicOnButton.show();
-        musicOffButton.show();
-        newGameButtonSquare.show();
-    });
-
     allSprites.draw();
     allSprites.update();
 }
@@ -646,18 +714,15 @@ function death(){
 
     allSprites.draw();
 
-    for (let i=0; i<player.health;i++){
-        image(heartImg, 5+(15*i), 5);
-        heartImg.resize(25,25);
-    }
+    for (let i=0; i<player.health;i++) image(heartImg, 5+(15*i), 5);
 
-    fill('white');
     image(coinImg, 5, 30);
-    coinImg.resize(20,20);
     text(`${coins} coins`, 55, 47);
 
-    fill('blue');
-    text(`Stage: ${stage} / 3`, 45, 70);
+    push();
+        fill('blue');
+        text(`Stage: ${stage} / 3`, 45, 70);
+    pop();
 
     if (boss.health <= 0){
         boss.changeAni('death');
@@ -676,13 +741,12 @@ function death(){
         player.ani.frameDelay = 10;
 
         if (player.ani.frame == player.ani.lastFrame){
-            gameState = win;
+            gameState = gameOver;
             player.ani.frameDelay = 4;
             newGameButton.show();
             settingsButton.hide();
         }
     }
-
 }
 
 function setting(){
@@ -704,14 +768,10 @@ function setting(){
         text("Settings", 495, 250);
     pop();
 
-    for (let i=0; i<player.health;i++){
-        image(heartImg, 5+(15*i), 5);
-        heartImg.resize(25,25);
-    }
+    for (let i=0; i<player.health;i++) image(heartImg, 5+(15*i), 5);
 
     fill('white');
     image(coinImg, 5, 30);
-    coinImg.resize(20,20);
     text(`${coins} coins`, 55, 47);
 
     fill('blue');
@@ -720,52 +780,14 @@ function setting(){
     fill(255, 100);
     noStroke();
     rect(250, 175, 500, 350);
+}
 
-    closeButton.mousePressed(() => {
-        gameState = runGame;
-        closeButton.hide();
-        homeButton.hide();
-        musicOnButton.hide();
-        musicOffButton.hide();
-        newGameButtonSquare.hide();
-        if (player.health <= 0) gameState = gameOver;
-    });
-
-    homeButton.mousePressed(() => {
-        gameState = intro;
-        closeButton.hide();
-        homeButton.hide();
-        musicOnButton.hide();
-        musicOffButton.hide();
-        newGameButtonSquare.hide();
-        settingsButton.hide();
-        playButton.show();
-        shopButton.show();
-        controlsButton.show();
-        creditsButton.show();
-        backButton.show();
-    });
-
-    musicOnButton.mousePressed(() => {
-
-    });
-    
-    musicOffButton.mousePressed(() => {
-        
-    });
-
-    newGameButtonSquare.mousePressed(() => {
-        closeButton.hide();
-        homeButton.hide();
-        musicOnButton.hide();
-        musicOffButton.hide();
-        newGameButtonSquare.hide();
-        newGame = true;
-        restartGame();
-        gameState = runGame;
-        opacity = 255;
-        settingsButton.show();
-    });
+function leaveSettings(){
+    closeButton.hide();
+    homeButton.hide();
+    musicOnButton.hide();
+    musicOffButton.hide();
+    newGameButtonSquare.hide();
 }
 
 let powerups = [
@@ -828,19 +850,10 @@ function win(){
     text('Winner!', 500, 300);
     text("Press 'b' to return to home screen", 500, 340);
     
-    newGameButton.mousePressed(() => {
-        coins += randomCoins;
-        newGame = true;
-        restartGame();
-        gameState = runGame;
-        opacity = 255;
-        newGameButton.hide();
-        settingsButton.show();
-    });
-
     if (kb.presses('b') || kb.presses('B')){
         coins += randomCoins;
         restartGame();
+        newGameButton.hide();
     }
 }
 
@@ -854,7 +867,7 @@ function gameOver(){
     textSize(32);
     text('Game Over!', 500, 300);
     text("Press 'b' to continue", 500, 340);
-    
+ 
     if (kb.presses('b') || kb.presses('B')) restartGame();
 }
 
@@ -873,14 +886,7 @@ function restartGame(){
     spawnEnemy = true;
     enemies.removeAll();
 
-    if (!newGame){
-        gameState = intro;
-        playButton.show();
-        shopButton.show();
-        controlsButton.show();
-        creditsButton.show();
-        backButton.show();
-    }
+    if (!newGame) gameState = intro;
 }
 
 function drawBackground(){
@@ -890,67 +896,24 @@ function drawBackground(){
     image(topLayer, offSetX, 0);
     image(light, offSetX, 0);
 
-    image(sky, offSetX+windowWidth, 0);
-    image(downLayer, offSetX+windowWidth, 0);
-    image(middleLayer, offSetX+windowWidth, 0);
-    image(topLayer, offSetX+windowWidth, 0);
-    image(light, offSetX+windowWidth, 0);
-
-    sky.resize(windowWidth, windowHeight);
-    downLayer.resize(windowWidth, windowHeight);
-    middleLayer.resize(windowWidth, windowHeight);
-    topLayer.resize(windowWidth, windowHeight);
-    light.resize(windowWidth, windowHeight);
+    image(sky, offSetX+1000, 0);
+    image(downLayer, offSetX+1000, 0);
+    image(middleLayer, offSetX+1000, 0);
+    image(topLayer, offSetX+1000, 0);
+    image(light, offSetX+1000, 0);
 
     if (gameState == runGame){
         offSetX--;
-        if(offSetX <= -windowWidth) offSetX = 0;
+        if(offSetX <= -1000) offSetX = 0;
     }
-
     if (round(millis()/1000) == timer){
         fps = getFPS();
         timer++;
     }
 
-    fill('green');
-    textSize(16);
-    text(`${fps} fps`, 950, 15);
-
-    if (gameState != runGame){
-        creditsButton.mousePressed(() => {
-            if (gameState == shop){
-                pinkButton.hide();
-                owletButton.hide();
-                dudeButton.hide();
-            }else if (gameState == intro){
-                playButton.hide();
-                controlsButton.hide();
-            }
-            gameState = credits;
-        });
-    
-        shopButton.mousePressed(() => {
-            if (gameState == intro){
-                playButton.hide();
-                controlsButton.hide();
-            }
-            gameState = shop;
-            pinkButton.show();
-            owletButton.show();
-            dudeButton.show();
-        });
-    
-        backButton.mousePressed(() => {
-            if (gameState == shop){
-                pinkButton.hide();
-                owletButton.hide();
-                dudeButton.hide();
-            }
-            playButton.show();
-            shopButton.show();
-            controlsButton.show();
-            creditsButton.show();
-            gameState = intro;
-        });
-    }
+    push();
+        fill('green');
+        textSize(16);
+        text(`${fps} fps`, 950, 15);
+    pop();
 }
