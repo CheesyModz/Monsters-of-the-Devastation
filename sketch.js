@@ -16,6 +16,19 @@
  * Key images:
  * https://illugion.itch.io/pixel-keyboard-lite
  * 
+ * Background Music:
+ * https://pixabay.com/music/beats-stellar-echoes-202315/
+ * 
+ * Sound Effects:
+ * https://pixabay.com/sound-effects/collect-5930/
+ * https://pixabay.com/sound-effects/poof-of-smoke-87381/
+ * https://pixabay.com/sound-effects/negative-beeps-6008/
+ * https://pixabay.com/sound-effects/cash-register-purchase-87313/
+ * https://pixabay.com/sound-effects/item-equip-6904/
+ * https://pixabay.com/sound-effects/game-bonus-144751/
+ * https://pixabay.com/sound-effects/monster-sound-medium-death-94826/
+ * https://pixabay.com/sound-effects/male-hurt7-48124/
+ * 
  * Author: Gary Huang
  * Date: Mar 19, 2024
  */
@@ -104,6 +117,9 @@ let coinMultiplier = 1;
 let randomCoins;
 let randomCoinGet = true;
 
+// music & sound effects
+let backgroundMusic, collectPowerup, playerDeath, gameOverSound, purchasedSound, itemEquip, completedSound, bossDeath, playerHurt;
+
 function preload(){
     rocksImg = [
         loadImage("assets/Pink_Monster/Rock1.png"),
@@ -149,6 +165,18 @@ function preload(){
         loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_k.png'),
         loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_l.png')
     ];
+
+    backgroundMusic = loadSound("assets/Music/stellar echoes.mp3");
+    backgroundMusic.setVolume(0.3);
+
+    collectPowerup = loadSound("assets/Music/collect powerup.mp3");
+    playerDeath = loadSound("assets/Music/poof smoke.mp3");
+    gameOverSound = loadSound("assets/Music/game over.mp3");
+    purchasedSound = loadSound("assets/Music/cash register purchase.mp3");
+    itemEquip = loadSound("assets/Music/item equip.mp3");
+    completedSound = loadSound("assets/Music/game bonus.mp3");
+    bossDeath = loadSound("assets/Music/death.mp3");
+    playerHurt = loadSound("assets/Music/male hurt.mp3");
 }
 
 function setup(){
@@ -270,6 +298,7 @@ function setup(){
         if (currentCharacter != 'Pink_Monster'){
             currentCharacter = 'Pink_Monster';
             pinkButton.html('Equipped');
+            itemEquip.play();
         }
     });
     owletButton = createButton('Buy')
@@ -281,8 +310,10 @@ function setup(){
             owletBuy = true;
             currentCharacter = 'Owlet_Monster';
             owletButton.html('Equipped');
+            purchasedSound.play();
         }else if (owletBuy){
             owletButton.html('Equipped');
+            itemEquip.play();
             currentCharacter = 'Owlet_Monster';
         }
     });
@@ -295,8 +326,10 @@ function setup(){
             dudeBuy = true;
             currentCharacter = 'Dude_Monster';
             dudeButton.html('Equipped');
+            purchasedSound.play()
         }else if (dudeBuy){
             dudeButton.html('Equipped');
+            itemEquip.play();
             currentCharacter = 'Dude_Monster';
         }
     });
@@ -362,7 +395,15 @@ function setup(){
         .position(395, 300)
         .hide()
         .mousePressed(() => {
-
+            backgroundMusic.setVolume(0.3);
+            collectPowerup.setVolume(1);
+            playerDeath.setVolume(1);
+            gameOverSound.setVolume(1);
+            purchasedSound.setVolume(1);
+            itemEquip.setVolume(1);
+            completedSound.setVolume(1);
+            bossDeath.setVolume(1);
+            playerHurt.setVolume(1);
         });
 
     musicOffButton = createImg('assets/Prinbles/Black-Icon/Music-Off.png')
@@ -370,7 +411,15 @@ function setup(){
         .position(515, 300)
         .hide()
         .mousePressed(() => {
-
+            backgroundMusic.setVolume(0);
+            collectPowerup.setVolume(0);
+            playerDeath.setVolume(0);
+            gameOverSound.setVolume(0);
+            purchasedSound.setVolume(0);
+            itemEquip.setVolume(0);
+            completedSound.setVolume(0);
+            bossDeath.setVolume(0);
+            playerHurt.setVolume(0);
         });
 
     newGameButtonSquare = createImg('assets/Prinbles/Black-Icon/Play.png')
@@ -419,11 +468,14 @@ function playerHit(enemy, player){
         enemyHitCd = 10;
     }
 
+    if (enemy.health <= 0 && !enemy.isBoss) enemy.remove();
+
     if (!bossAttacking && enemy.isBoss) return;
 
     if (playerHitCd == 0){
         player.health--;
         playerHitCd = 30;
+        playerHurt.play();
         if (player.health <= 0){
             gameState = death;
             boss.speed = 0;
@@ -431,7 +483,9 @@ function playerHit(enemy, player){
     }
 }
 
+
 function draw(){
+    if (!backgroundMusic.isPlaying()) backgroundMusic.play();
     clear();
     gameState();
 }
@@ -535,7 +589,7 @@ function credits(){
 let opacity = 255;
 let shootCd = 0;
 let shot = false;
-let move;
+let move, healthWidth;
 
 function runGame(){
     drawBackground();
@@ -564,7 +618,7 @@ function runGame(){
     // allSprites.debug = mouse.pressing();
 
     if (spawnEnemy && stage == 1){
-        for (let i = 0; i < 4; i++){
+        for (let i = 0; i < 6; i++){
             enemies.amount++;
             enemies[enemies.amount-1].ani = enemiesAni[round(random(0, enemiesAni.length-1))];
             enemies[enemies.amount-1].scale *= 3;
@@ -593,12 +647,23 @@ function runGame(){
     // enemies will go towards character
     for (let i = 0; i < enemies.length; i++){
         if (player.x < enemies[i].x){
-            enemies[i].move('left', 2);
+            enemies[i].direction = 'left';
             enemies[i].mirror.x = true;
         }else{
-            enemies[i].move('right', 2);
+            enemies[i].direction = 'right';
             enemies[i].mirror.x = false;
         }
+        enemies[i].speed = 1;
+
+        push();
+            healthWidth = map(enemies[i].health, 0, 10, 0, 50);
+            fill('red');
+            rect(enemies[i].x-25, enemies[i].y-50, healthWidth, 15);
+            stroke('white');
+            noFill();
+            rect(enemies[i].x-25, enemies[i].y-50, 50, 15);
+            noStroke();  
+        push();
     }
 
     // boss move towards player
@@ -631,6 +696,17 @@ function runGame(){
             boss.changeAni(move);
         }
         changeMoveCd += 1;
+
+        push();
+            healthWidth = map(boss.health, 0, 400, 0, 400);
+            fill('red');
+            rect(300, 25, healthWidth*2, 30);
+            stroke('white');
+            noFill();
+            rect(300, 25, 400, 30);
+            noStroke();  
+        push();
+
     }
 
     if (playerSensor.overlapping(floor)){
@@ -734,6 +810,7 @@ function death(){
             boss.ani.frameDelay = 4;
             newGameButton.show();
             settingsButton.hide();
+            bossDeath.play();
         }
     }else if (player.health <= 0){
         player.changeAni(`${currentCharacter}death`);
@@ -745,6 +822,7 @@ function death(){
             player.ani.frameDelay = 4;
             newGameButton.show();
             settingsButton.hide();
+            playerDeath.play();
         }
     }
 }
@@ -808,7 +886,9 @@ function stageCompletion(){
     if (!foundPowerup){
         powerup = powerups[round(random(powerups.length-1))];
         foundPowerup = true;
+        collectPowerup.play();
     }
+
     fill('white');
     textAlign(CENTER);
     textSize(32);
@@ -842,6 +922,7 @@ function win(){
     if (randomCoinGet){
         randomCoins = round(random(5,10))*stage;
         randomCoinGet = false;
+        completedSound.play();
     }
 
     fill('red');
@@ -852,15 +933,22 @@ function win(){
     
     if (kb.presses('b') || kb.presses('B')){
         coins += randomCoins;
+        newGame = false;
         restartGame();
         newGameButton.hide();
     }
 }
 
+
 function gameOver(){
     clear();
     drawBackground();
     allSprites.draw();
+
+    if (enter){
+        gameOverSound.play();
+        enter = false;
+    }
 
     fill('red');
     textAlign(CENTER);
@@ -868,7 +956,10 @@ function gameOver(){
     text('Game Over!', 500, 300);
     text("Press 'b' to continue", 500, 340);
  
-    if (kb.presses('b') || kb.presses('B')) restartGame();
+    if (kb.presses('b') || kb.presses('B')){
+        newGame = false;
+        restartGame();
+    }
 }
 
 function restartGame(){
@@ -886,7 +977,12 @@ function restartGame(){
     spawnEnemy = true;
     enemies.removeAll();
 
-    if (!newGame) gameState = intro;
+    if (!enter) enter = true;
+
+    if (!newGame){
+        gameState = intro;
+        newGameButton.hide();
+    }
 }
 
 function drawBackground(){
