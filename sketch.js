@@ -19,6 +19,15 @@
  * Background Music:
  * https://pixabay.com/music/beats-stellar-echoes-202315/
  * 
+ * Social Media icons:
+ * https://cazwolf.itch.io/caz-social-media
+ * 
+ * P5 logo:
+ * https://p5play.org/assets/p5play_logo.svg
+ * 
+ * Font:
+ * https://www.1001freefonts.com/watanabe.font
+ * 
  * Sound Effects:
  * https://pixabay.com/sound-effects/collect-5930/
  * https://pixabay.com/sound-effects/poof-of-smoke-87381/
@@ -64,12 +73,12 @@ let light, sky, downLayer, middleLayer, topLayer;
 let offSetX = 0;
 
 // game state
-let gameState = intro;
+let gameState = enterScreen;
 
-// home screen menu buttons
-let playButton, shopButton, controlsButton, creditsButton;
+// home screen menu 
+let playButton, shopButton, controlsButton, creditsButton, gmail, linkedIn, instagram, github, discord, socialText;
 
-let newGameButton;
+let newGameButton, gura, p5logo;
 
 // settings screen button
 let settingsButton, closeButton, homeButton, musicOnButton, musicOffButton, newGameButtonSquare;
@@ -85,8 +94,8 @@ let backButton;
 let keysImgs = [];
 let keysInfo = [
     "Jump",
-    "Move character to the left",
-    "Move character to the right",
+    "Move left",
+    "Move right",
     "Punch",
     "Double punch",
     "Throw rocks"
@@ -100,8 +109,6 @@ let bossMoves = [
     'run',
     'angry',
     'angry2',
-    'eyesNarrow',
-    'eyesClosed',
     'atk1',
     'atk2',
     'atk3'
@@ -110,6 +117,7 @@ let changeMoveCd = 0;
 let tempBossSpeed;
 
 let stage = 1;
+let font;
 
 // coins
 let coins = 0;
@@ -177,9 +185,15 @@ function preload(){
     completedSound = loadSound("assets/Music/game bonus.mp3");
     bossDeath = loadSound("assets/Music/death.mp3");
     playerHurt = loadSound("assets/Music/male hurt.mp3");
+
+    font = loadFont("assets/Font/Watanabe.ttf");
+
+    gura = loadImage("assets/icons/gura.png");
+    p5logo = loadImage("https://p5play.org/assets/p5play_logo.svg");
 }
 
 function setup(){
+    textFont(font);
     new Canvas(1000, 700);
     world.gravity.y = 5;
 
@@ -240,8 +254,6 @@ function setup(){
         atk2: { row:4, frameSize: [96, 95], frames: 5 },
         angry2: { row:5, frameSize: [96, 95], frames: 6 },
         atk3: { row:6, frameSize: [96, 95], frames: 9 },
-        eyesNarrow: { row:7, frameSize: [96, 95], frames: 3 },
-        eyesClosed: { row:8, frameSize: [96, 95], frames: 3 },
         death: { row:9, frameSize: [96, 95.5], frames: 6 },
         idle: { row:0, frameSize: [96, 84], frames: 5 },
     });
@@ -257,6 +269,7 @@ function setup(){
     playButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/Play Button.png')
         .size(120, 50)
         .position(440, 310)
+        .hide()
         .mousePressed(() => {
             gameState = runGame;
             player.ani = `${currentCharacter}idle`;
@@ -270,6 +283,7 @@ function setup(){
     shopButton = createImg('assets/Prinbles/Black-Icon/Cart.png')
         .size(50, 50)
         .position(875, 20)
+        .hide()
         .mousePressed(() => {
             if (gameState == intro) leaveIntro();
             gameState = shop;
@@ -277,6 +291,7 @@ function setup(){
     controlsButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/Controls Button.png')
         .size(120, 50)
         .position(440, 370)
+        .hide()
         .mousePressed(() => {
             leaveIntro();
             gameState = controls;
@@ -284,6 +299,7 @@ function setup(){
     creditsButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Info Square Button.png')
         .size(50, 50)
         .position(820, 20)
+        .hide()
         .mousePressed(() => {
             if (gameState == intro) leaveIntro();
             else if (gameState == shop) leaveShop();
@@ -337,6 +353,7 @@ function setup(){
     backButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Home Square Button.png')
         .size(50, 50)
         .position(930, 20)
+        .hide()
         .mousePressed(() => {
             if (gameState == shop) leaveShop();
             gameState = intro;
@@ -447,6 +464,48 @@ function setup(){
     middleLayer.resize(1000, 700);
     topLayer.resize(1000, 700);
     light.resize(1000, 700);
+
+    gmail = createImg("assets/Pixel Fantasy Icons Social Media/MV Icons Social Media/Individual Icons/social-media4.png")
+        .size(40,40)
+        .position(740, 625)
+        .hide()
+        .mouseOver(() => {
+            socialText = "garyhuang325@gmail.com"
+        });
+
+    linkedIn = createImg("assets/Pixel Fantasy Icons Social Media/MV Icons Social Media/Individual Icons/social-media5.png")
+        .size(40,40)
+        .position(790, 625)
+        .hide()
+        .mouseOver(() => {
+            socialText = "@Gary Huang";
+        });
+    
+    instagram = createImg("assets/Pixel Fantasy Icons Social Media/MV Icons Social Media/Individual Icons/social-media6.png")
+        .size(40,40)
+        .position(840, 625)
+        .hide()
+        .mouseOver(() => {
+            socialText = "@gary_huangg";
+        });
+
+    github = createImg("assets/Pixel Fantasy Icons Social Media/MV Icons Social Media/Individual Icons/social-media24.png")
+        .size(40,40)
+        .position(890, 625)
+        .hide()
+        .mouseOver(() => {
+            socialText = "@CheesyModz";
+        });
+
+    discord = createImg("assets/Pixel Fantasy Icons Social Media/MV Icons Social Media/Individual Icons/social-media25.png")
+        .size(40,40)
+        .position(940, 625)
+        .hide()
+        .mouseOver(() => {
+            socialText = "@itscheesemodz";
+        });
+
+    gura.resize(100, 100);
 }
 
 function enemyHit(enemy, rock){
@@ -483,14 +542,41 @@ function playerHit(enemy, player){
     }
 }
 
-
 function draw(){
-    if (!backgroundMusic.isPlaying()) backgroundMusic.play();
+    if (gameState != enterScreen && !backgroundMusic.isPlaying()) backgroundMusic.play();
     clear();
     gameState();
 }
 
+let opacity = 0;
 let enter = true;
+
+function enterScreen(){
+    background('gray');
+
+    if (enter){
+        textSize(60);
+        textAlign(CENTER);
+        enter = false;
+    }
+
+    fill(255, 255, 255, opacity);
+    text("Welcome!", 500, 100);
+    tint(255, opacity);
+    image(gura, 300, 275);
+    text('X', 500, 350);
+    image(p5logo, 600, 250);
+    text('Press anywhere to continue', 500, 550);
+
+    if (opacity <= 255) opacity += 2;
+
+    if (mouse.presses()){
+        gameState = intro;
+        backgroundMusic.play();
+        opacity = 255;
+        enter = true;
+    }
+}
 
 function intro(){
     drawBackground();
@@ -502,18 +588,31 @@ function intro(){
         creditsButton.show();
         backButton.show();
         enter = false;
+        gmail.show();
+        linkedIn.show();
+        instagram.show();
+        github.show();
+        discord.show();
     }
 
     fill('white');
     textAlign(CENTER);
-    textSize(48);
+    textSize(56);
     text("Monsters of the Devastation", 500, 250);
+
+    textSize(20);
+    text(socialText, 850, 600);
 }
 
 function leaveIntro(){
     enter = true;
     playButton.hide();
     controlsButton.hide();
+    gmail.hide();
+    linkedIn.hide();
+    instagram.hide();
+    github.hide();
+    discord.hide();
 }
 
 function shop(){
@@ -527,10 +626,10 @@ function shop(){
     }
 
     image(coinImg, 5, 10);
-    text(`${coins} coins`, 60, 27);
+    text(`${coins} coins`, 64, 27);
 
-    textSize(32);
-    text("Shop", 500, 30);
+    textSize(64);
+    text("Shop", 500, 100);
 
     image(pinkMonster, 210, 250);
     image(owletMonster, 460, 250);
@@ -565,8 +664,8 @@ function controls(){
 
     textAlign(LEFT);
     for (let i = 0; i < keysImgs.length; i++){
-        image(keysImgs[i], 300, 90*(i+1));
-        text(keysInfo[i], 360, 30+90*(i+1));
+        image(keysImgs[i], 420, 90*(i+1));
+        text(keysInfo[i], 480, 30+90*(i+1));
     }
 }
 
@@ -575,18 +674,21 @@ function credits(){
 
     textAlign(CENTER);
     textSize(24);
-    text("Author: Gary Huang\n \
-    Characters by @Free Game Assets(GUI, Sprite, Tilesets)\nhttps://free-game-assets.itch.io/free-tiny-hero-sprites-pixel-art\n \
-    Monsters by @DeepDiveGameStudio\nhttps://deepdivegamestudio.itch.io/demon-sprite-pack\n \
-    Boss by @Elthen's Pixel Art Shop\nhttps://elthen.itch.io/2d-pixel-art-minotaur-sprites\n \
-    Background by @Pixfinity\nhttps://pixfinity.itch.io/the-dungeon-pack\n \
-    Heart by @Yrixsasow\nhttps://yrixsasow.itch.io/heart-icon-2\n \
-    Coin by @OZU\nhttps://osmanfrat.itch.io/coin\n \
-    Buttons by @Nectanebo\nhttps://nectanebo.itch.io/menu-buttons\n \
-    Keys by @illugion\nhttps://illugion.itch.io/pixel-keyboard-lite", 500, 125);
+    text("Game Created by Gary Huang\n \
+    Characters by @Free Game Assets(GUI, Sprite, Tilesets)\n \
+    Monsters by @DeepDiveGameStudio\n \
+    Boss by @Elthen's Pixel Art Shop\n \
+    Background by @Pixfinity\n \
+    Heart by @Yrixsasow\n \
+    Coin by @OZU\n \
+    Buttons by @Nectanebo\n \
+    Keys by @illugion\n \
+    Social Media Icons by @Caz \n \
+    Background music by @Top-Flow \n \
+    Sounds effects by @Pixabay @Universfield\n \
+    Font by @Pinisiart", 500, 175);
 }
 
-let opacity = 255;
 let shootCd = 0;
 let shot = false;
 let move, healthWidth;
@@ -608,11 +710,11 @@ function runGame(){
     fill('white');
     textSize(16);
     image(coinImg, 5, 30);
-    text(`${coins} coins`, 55, 47);
+    text(`${coins} coins`, 64, 47);
 
     push();
         fill('blue');
-        text(`Stage: ${stage} / 3`, 45, 70);
+        text(`Stage: ${stage} / 3`, 54, 70);
     pop();
 
     // allSprites.debug = mouse.pressing();
@@ -793,11 +895,11 @@ function death(){
     for (let i=0; i<player.health;i++) image(heartImg, 5+(15*i), 5);
 
     image(coinImg, 5, 30);
-    text(`${coins} coins`, 55, 47);
+    text(`${coins} coins`, 64, 47);
 
     push();
         fill('blue');
-        text(`Stage: ${stage} / 3`, 45, 70);
+        text(`Stage: ${stage} / 3`, 54, 70);
     pop();
 
     if (boss.health <= 0){
@@ -850,10 +952,10 @@ function setting(){
 
     fill('white');
     image(coinImg, 5, 30);
-    text(`${coins} coins`, 55, 47);
+    text(`${coins} coins`, 64, 47);
 
     fill('blue');
-    text(`Stage: ${stage} / 3`, 45, 70);
+    text(`Stage: ${stage} / 3`, 54, 70);
 
     fill(255, 100);
     noStroke();
@@ -971,6 +1073,7 @@ function restartGame(){
     boss.health = 200;
     boss.x = 700;
     boss.y = 150;
+    boss.changeAni(bossMoves[round(random(0, bossMoves.length-1))]);
     bossAttacking = false;
     boss.collider = 'static';
     boss.visible = false;
