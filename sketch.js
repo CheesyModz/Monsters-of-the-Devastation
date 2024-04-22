@@ -43,8 +43,7 @@
  */
 
 // fps stats
-let fps;
-let timer = 1;
+let fps, timer;
 
 // character variables
 // facing: direction false for left, true for right
@@ -54,7 +53,6 @@ let isDoublePunching = false;
 
 // sprite objects
 let player, hand, rocks, floor, box;
-
 let currentCharacter = 'Pink_Monster';
 let characters = ['Pink_Monster', 'Owlet_Monster', 'Dude_Monster'];
 
@@ -128,12 +126,17 @@ let randomCoinGet = true;
 // music & sound effects
 let backgroundMusic, collectPowerup, playerDeath, gameOverSound, purchasedSound, itemEquip, completedSound, bossDeath, playerHurt;
 
+/**
+ * Preload images, sounds and font
+ */
 function preload(){
+    // rocks
     rocksImg = [
         loadImage("assets/Pink_Monster/Rock1.png"),
         loadImage("assets/Pink_Monster/Rock2.png")
     ];
 
+    // enemies
     enemiesAni = [
         loadAnimation('assets/Basic Demon/antlered rascal/AntleredRascal.png', { frameSize: [16, 16], frames: 4 }),
         loadAnimation('assets/Basic Demon/clawed abomination/ClawedAbomination.png', { frameSize: [16, 16], frames: 4 }),
@@ -150,17 +153,20 @@ function preload(){
         loadAnimation('assets/Basic Demon/tainted scoundrel/TaintedScoundrel.png', { frameSize: [16, 16], frames: 4 }),
         loadAnimation('assets/Basic Demon/warp skull/WarpSkull.png', { frameSize: [16, 16], frames: 4 })
     ];
-
     bossImg = loadImage('assets/Minotaur - Sprite Sheet.png');
+    
+    // hearts and coins
     heartImg = loadImage('assets/heart.png');
     coinImg = loadImage('assets/coin_spin.gif');
 
+    // background image
     light = loadImage('assets/ParallaxBackground/Light.png');
     sky = loadImage('assets/ParallaxBackground/Sky.png');
     downLayer = loadImage('assets/ParallaxBackground/DownLayer.png');
     middleLayer = loadImage('assets/ParallaxBackground/MiddleLayer.png');
     topLayer = loadImage('assets/ParallaxBackground/TopLayer.png');
 
+    // characters
     pinkMonster = loadImage('assets/Pink_Monster/Pink_Monster.png');
     owletMonster = loadImage('assets/Owlet_Monster/Owlet_Monster.png');
     dudeMonster = loadImage('assets/Dude_Monster/Dude_Monster.png');
@@ -174,9 +180,11 @@ function preload(){
         loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_l.png')
     ];
 
+    // bgm
     backgroundMusic = loadSound("assets/Music/stellar echoes.mp3");
     backgroundMusic.setVolume(0.3);
 
+    // sounds effects
     collectPowerup = loadSound("assets/Music/collect powerup.mp3");
     playerDeath = loadSound("assets/Music/poof smoke.mp3");
     gameOverSound = loadSound("assets/Music/game over.mp3");
@@ -186,21 +194,26 @@ function preload(){
     bossDeath = loadSound("assets/Music/death.mp3");
     playerHurt = loadSound("assets/Music/male hurt.mp3");
 
+    // font
     font = loadFont("assets/Font/Watanabe.ttf");
 
+    // logos
     gura = loadImage("assets/icons/gura.png");
     p5logo = loadImage("https://p5play.org/assets/p5play_logo.svg");
 }
 
+/**
+ * Set up sprites and buttons 
+ */
 function setup(){
     textFont(font);
     new Canvas(1000, 700);
     world.gravity.y = 5;
 
+    // player
     player = new Sprite(100, 500, 32, 32);
     player.scale *= 2;
     player.health = 5;
-
     for (character of characters){
         player.addAni(`${character}atk1`, `assets/${character}/${character}_Attack1_4.png`, { frameSize: [32, 32], frames: 4 });
         player.addAni(`${character}atk2`, `assets/${character}/${character}_Attack2_6.png`, { frameSize: [32, 32], frames: 6 });
@@ -213,35 +226,37 @@ function setup(){
         player.addAni(`${character}throw`, `assets/${character}/${character}_Throw_4.png`, { frameSize: [32, 32], frames: 4 });
         player.addAni(`${character}idle`, `assets/${character}/${character}_Idle_4.png`, { frameSize: [32, 32], frames: 4 });
     }
-
     playerSensor = new Sprite(player.x, player.y+5, 50, 60, 'none');
     playerSensor.visible = false;
-
     new GlueJoint(player, playerSensor);
+    // player's hand for rock throw
+    hand = new Sprite();
+    hand.diameter = 1;
+    hand.collider = 'None';
+    hand.visible = false;
 
+    // rocks
     rocks = new Group();
     rocks.x = () => hand.x;
     rocks.y = () => hand.y;
     rocks.speed = 10;
     rocks.life = 100;
 
-    hand = new Sprite();
-    hand.diameter = 1;
-    hand.collider = 'None';
-    hand.visible = false;
-
+    // floor
     floor = new Sprite(500, 565, 1300, 10, 'static');
 	floor.color = color(255, 0, 0, 0);
 	floor.stroke = color(255, 0, 0, 0);
 
+    // enemies
     enemies = new Group();
     enemies.y = 540;
-    enemies.health = () => round(random(10));
+    enemies.health = () => round(random(2, 10));
     enemies.isBoss = false;
-
+    enemies.isHit = false;
     enemies.collides(rocks, enemyHit);
     enemies.collides(player, playerHit);
 
+    // boss
     boss = new Sprite(700, 150, 54, 42, 'static');
     boss.spriteSheet = bossImg;
     boss.scale *= 2;
@@ -258,14 +273,13 @@ function setup(){
         idle: { row:0, frameSize: [96, 84], frames: 5 },
     });
     boss.visible = false;
-
     boss.collides(rocks, enemyHit);
     boss.collides(player, playerHit);
 
     allSprites.autoDraw = false;
     allSprites.autoUpdate = false;
 
-    //intro
+    // intro buttons
     playButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/Play Button.png')
         .size(120, 50)
         .position(440, 310)
@@ -306,7 +320,7 @@ function setup(){
             gameState = credits;
         })
 
-    //shop
+    // shop buttons
     pinkButton = createButton('Equipped')
         .hide()
         .position(215, 370)
@@ -372,7 +386,7 @@ function setup(){
             settingsButton.show();
         });
 
-    //settings buttons
+    // settings buttons
     settingsButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Settings Square Button.png')
         .size(50, 50)
         .position(930, 20)
@@ -452,7 +466,7 @@ function setup(){
             settingsButton.show();
         });
 
-    //resize images
+    // resize images
     coinImg.resize(20,20);
     heartImg.resize(25,25);
     pinkMonster.resize(100, 100);
@@ -464,7 +478,9 @@ function setup(){
     middleLayer.resize(1000, 700);
     topLayer.resize(1000, 700);
     light.resize(1000, 700);
+    gura.resize(100, 100);
 
+    // social media icons
     gmail = createImg("assets/Pixel Fantasy Icons Social Media/MV Icons Social Media/Individual Icons/social-media4.png")
         .size(40,40)
         .position(740, 625)
@@ -504,21 +520,40 @@ function setup(){
         .mouseOver(() => {
             socialText = "@itscheesemodz";
         });
-
-    gura.resize(100, 100);
 }
+
+/**
+ * Function for collision between enemy and rock
+ * 
+ * @param {*} enemy - enemy that was hit by rock
+ * @param {*} rock  - rock that hit enemy
+ */
 
 function enemyHit(enemy, rock){
     rock.remove();
     enemy.health--;
 
+    // set enemy to be hit to display hp bar
+    if (!enemy.isHit) enemy.isHit = true;
+
+    // if enemy is not boss and hp is 0 remove enemy
     if (enemy.health <= 0 && !enemy.isBoss) enemy.remove();
 }
 
+// cooldown variables
 let playerHitCd = 0;
 let enemyHitCd = 0;
 
+/**
+ * Function for collision between player and enemy
+ * 
+ * @param {*} enemy  - enemy that collided with player
+ * @param {*} player  - player
+ * @returns 
+ */
+
 function playerHit(enemy, player){
+    // if player is punching, decrease enemy's health and set atk cd
     if (isPunching && enemyHitCd == 0){
         enemy.health -= 2;
         enemyHitCd = 10;
@@ -527,14 +562,17 @@ function playerHit(enemy, player){
         enemyHitCd = 10;
     }
 
+    // if enemy is hit, display hp bar, remove enemy if hp 0 and do nothing if boss is not attacking
+    if (!enemy.isHit && !enemy.isBoss) enemy.isHit = true;
     if (enemy.health <= 0 && !enemy.isBoss) enemy.remove();
-
     if (!bossAttacking && enemy.isBoss) return;
 
+    // decrease player hp and set a cooldown
     if (playerHitCd == 0){
         player.health--;
         playerHitCd = 30;
         playerHurt.play();
+        // if player is dead change screen
         if (player.health <= 0){
             gameState = death;
             boss.speed = 0;
@@ -542,7 +580,11 @@ function playerHit(enemy, player){
     }
 }
 
+/**
+ * Draw screen onto canvas
+ */
 function draw(){
+    // play background music on loop
     if (gameState != enterScreen && !backgroundMusic.isPlaying()) backgroundMusic.play();
     clear();
     gameState();
@@ -551,36 +593,48 @@ function draw(){
 let opacity = 0;
 let enter = true;
 
+/**
+ * Loading enter screen with logos
+ */
 function enterScreen(){
     background('gray');
 
+    // upon entry do the following
     if (enter){
         textSize(60);
         textAlign(CENTER);
         enter = false;
     }
 
-    fill(255, 255, 255, opacity);
-    text("Welcome!", 500, 100);
-    tint(255, opacity);
-    image(gura, 300, 275);
-    text('X', 500, 350);
-    image(p5logo, 600, 250);
-    text('Press anywhere to continue', 500, 550);
-
+    // fade in animation for logos and text
+    push();
+        fill(255, 255, 255, opacity);
+        text("Welcome!", 500, 100);
+        tint(255, opacity);
+        image(gura, 300, 275);
+        text('X', 500, 350);
+        image(p5logo, 600, 250);
+        text('Press anywhere to continue', 500, 550);
+    pop();
     if (opacity <= 255) opacity += 2;
 
+    // if mouse is press change screen
     if (mouse.presses()){
         gameState = intro;
         backgroundMusic.play();
         opacity = 255;
         enter = true;
+        timer = round(millis()/1000);
     }
 }
 
+/**
+ * Intro screen
+ */
 function intro(){
     drawBackground();
 
+    // upon entry do the following
     if (enter){
         playButton.show();
         shopButton.show();
@@ -604,6 +658,9 @@ function intro(){
     text(socialText, 850, 600);
 }
 
+/**
+ * Hide button when leave intro screen
+ */
 function leaveIntro(){
     enter = true;
     playButton.hide();
@@ -615,9 +672,13 @@ function leaveIntro(){
     discord.hide();
 }
 
+/**
+ * Shop screen
+ */
 function shop(){
     drawBackground();
 
+    // upon entry do the following
     if (enter){
         pinkButton.show();
         owletButton.show();
@@ -643,11 +704,15 @@ function shop(){
     image(coinImg, 730, 230);
     text('100',  770, 245);
 
+    // change button text if user equips or buys
     if (currentCharacter != 'Pink_Monster') pinkButton.html('Equip');
     if (owletBuy && currentCharacter != 'Owlet_Monster') owletButton.html('Equip');
     if (dudeBuy && currentCharacter != 'Dude_Monster') dudeButton.html('Equip');
 }
 
+/**
+ * Hide button when leave shop
+ */
 function leaveShop(){
     enter = true;
     pinkButton.hide();
@@ -655,6 +720,9 @@ function leaveShop(){
     dudeButton.hide();
 }
 
+/**
+ * Controls screen
+ */
 function controls(){
     drawBackground();
 
@@ -669,6 +737,9 @@ function controls(){
     }
 }
 
+/**
+ * Credits screen
+ */
 function credits(){
     drawBackground();
 
@@ -689,13 +760,16 @@ function credits(){
     Font by @Pinisiart", 500, 175);
 }
 
+// shoot cooldown
 let shootCd = 0;
 let shot = false;
+// boos move enemies' hp bar
 let move, healthWidth;
 
 function runGame(){
     drawBackground();
 
+    // fade out animation
     if (opacity > 0){
         push();
             fill(255, opacity);
@@ -719,6 +793,7 @@ function runGame(){
 
     // allSprites.debug = mouse.pressing();
 
+    // spawn enemies according to the stage
     if (spawnEnemy && stage == 1){
         for (let i = 0; i < 6; i++){
             enemies.amount++;
@@ -729,10 +804,12 @@ function runGame(){
         spawnEnemy = false;
     }else if (spawnEnemy && stage == 2){
         for (let i = 0; i < 4; i++){
+            //right side enemies
             enemies.amount++;
             enemies[enemies.amount-1].ani = enemiesAni[round(random(0, enemiesAni.length-1))];
             enemies[enemies.amount-1].scale *= 3;
             enemies[enemies.amount-1].x = 1000 + (i*50);
+            //left side enemies
             enemies.amount++;
             enemies[enemies.amount-1].x = -(i*50);
             enemies[enemies.amount-1].ani = enemiesAni[round(random(0, enemiesAni.length-1))];
@@ -757,23 +834,23 @@ function runGame(){
         }
         enemies[i].speed = 1;
 
-        push();
-            healthWidth = map(enemies[i].health, 0, 10, 0, 50);
-            fill('red');
-            rect(enemies[i].x-25, enemies[i].y-50, healthWidth, 15);
-            stroke('white');
-            noFill();
-            rect(enemies[i].x-25, enemies[i].y-50, 50, 15);
-            noStroke();  
-        push();
+        //display health bar if enemy is hit
+        if (enemies[i].isHit){
+            push();
+                healthWidth = map(enemies[i].health, 0, 10, 0, 50);
+                fill('red');
+                rect(enemies[i].x-25, enemies[i].y-50, healthWidth, 15);
+                stroke('white');
+                noFill();
+                rect(enemies[i].x-25, enemies[i].y-50, 50, 15);
+                noStroke();  
+            push();
+        }
     }
 
     // boss move towards player
     if (stage == 3){
         // boss will face character
-        if (player.x < boss.x) boss.mirror.x = true;
-        else boss.mirror.x = false;
-
         if (player.x < boss.x){
             boss.direction = 'left';
             boss.mirror.x = true;
@@ -782,7 +859,7 @@ function runGame(){
             boss.mirror.x = false;
         }
 
-        // change boss move on cd
+        // change boss move on cooldown
         if (changeMoveCd % 150 == 0){
             move = bossMoves[round(random(0, bossMoves.length-1))];
             if (move.includes('atk')){
@@ -799,6 +876,7 @@ function runGame(){
         }
         changeMoveCd += 1;
 
+        // display boss health bar
         push();
             healthWidth = map(boss.health, 0, 400, 0, 400);
             fill('red');
@@ -811,6 +889,7 @@ function runGame(){
 
     }
 
+    // handle key board input
     if (playerSensor.overlapping(floor)){
         if (kb.presses('w') || kb.presses('W')){
             player.changeAni(`${currentCharacter}jump`);
@@ -860,15 +939,10 @@ function runGame(){
         isDoublePunching = false;
     }
 
-    if (shot) shootCd += 1;
-    if (shootCd == 25){
-        shot = false;
-        shootCd = 0;
-    }
-
     if (player.x < -20) player.x = 980;
     else if (player.x > 1020) player.x = 20;
 
+    // change screen if conditions are met
     if (enemies.amount == 0 && stage != 3){
         gameState = stageCompletion;
         settingsButton.hide();
@@ -876,17 +950,26 @@ function runGame(){
         gameState = death;
         boss.speed = 0;
     }
+
+    // cool downs
+    if (shot) shootCd += 1;
+    if (shootCd == 25){
+        shot = false;
+        shootCd = 0;
+    }
     if (playerHitCd != 0){
         playerHitCd--;
         player.changeAni(`${currentCharacter}hurt`);
     }
-
     if (enemyHitCd != 0) enemyHitCd--;
 
     allSprites.draw();
     allSprites.update();
 }
 
+/**
+ * Function or player's or boss's death
+ */
 function death(){
     drawBackground();
 
@@ -902,11 +985,13 @@ function death(){
         text(`Stage: ${stage} / 3`, 54, 70);
     pop();
 
+    //boss death
     if (boss.health <= 0){
         boss.changeAni('death');
         boss.ani.frameDelay = 10;
         boss.update();
 
+        // show full animation before changing screen
         if (boss.ani.frame == boss.ani.lastFrame){
             gameState = win;
             boss.ani.frameDelay = 4;
@@ -914,11 +999,13 @@ function death(){
             settingsButton.hide();
             bossDeath.play();
         }
+    //player death
     }else if (player.health <= 0){
         player.changeAni(`${currentCharacter}death`);
         player.update();
         player.ani.frameDelay = 10;
 
+        // show full animation before changing screen
         if (player.ani.frame == player.ani.lastFrame){
             gameState = gameOver;
             player.ani.frameDelay = 4;
@@ -929,11 +1016,15 @@ function death(){
     }
 }
 
+/**
+ * Settings screen - display everything before settings button press and pause it
+ */
 function setting(){
     drawBackground();
 
     allSprites.draw();
 
+    // fade out
     if (opacity > 0){
         push();
             fill(255, opacity);
@@ -962,6 +1053,9 @@ function setting(){
     rect(250, 175, 500, 350);
 }
 
+/**
+ * Hide buttons when leave settings
+ */
 function leaveSettings(){
     closeButton.hide();
     homeButton.hide();
@@ -970,6 +1064,7 @@ function leaveSettings(){
     newGameButtonSquare.hide();
 }
 
+// powerup variables
 let powerups = [
     "Doubled Coins",
     "Heal 1 Heart",
@@ -977,14 +1072,17 @@ let powerups = [
 let foundPowerup = false;
 let powerup;
 
+/**
+ * Stage competed screen
+ */
 function stageCompletion(){
     drawBackground();
     
+    // get random power up and amount of coins once
     if (randomCoinGet){
         randomCoins = round(random(5,10))*stage*coinMultiplier;
         randomCoinGet = false;
     }
-
     if (!foundPowerup){
         powerup = powerups[round(random(powerups.length-1))];
         foundPowerup = true;
@@ -998,6 +1096,7 @@ function stageCompletion(){
     text("Press 'b' to continue", 500, 380);
     text(`PowerUp: ${powerup}`, 500, 440);
 
+    // change screen to runGame, add/change values
     if (kb.presses('b') || kb.presses('B')){
         if (powerup == "Heal 1 Heart") player.health++;
         else coinMultiplier = 2;
@@ -1018,9 +1117,13 @@ function stageCompletion(){
 
 let newGame = false;
 
+/**
+ * Winner screen
+ */
 function win(){
     drawBackground();
 
+    // get random amount of coins once
     if (randomCoinGet){
         randomCoins = round(random(5,10))*stage;
         randomCoinGet = false;
@@ -1033,6 +1136,7 @@ function win(){
     text('Winner!', 500, 300);
     text("Press 'b' to return to home screen", 500, 340);
     
+    // change screen to intro, add/change values
     if (kb.presses('b') || kb.presses('B')){
         coins += randomCoins;
         newGame = false;
@@ -1042,11 +1146,15 @@ function win(){
 }
 
 
+/**
+ * Game over screen
+ */
 function gameOver(){
     clear();
     drawBackground();
     allSprites.draw();
 
+    // upon entry do the following
     if (enter){
         gameOverSound.play();
         enter = false;
@@ -1058,13 +1166,18 @@ function gameOver(){
     text('Game Over!', 500, 300);
     text("Press 'b' to continue", 500, 340);
  
+    // change screen to intro, reset values
     if (kb.presses('b') || kb.presses('B')){
         newGame = false;
         restartGame();
     }
 }
 
+/**
+ * Reset values - animation, multipliers, hp, positions, etc.
+ */
 function restartGame(){
+    //reset the values
     coinMultiplier = 1;
     player.health = 5;
     player.x = 100;
@@ -1079,7 +1192,6 @@ function restartGame(){
     boss.visible = false;
     spawnEnemy = true;
     enemies.removeAll();
-
     if (!enter) enter = true;
 
     if (!newGame){
@@ -1088,7 +1200,11 @@ function restartGame(){
     }
 }
 
+/**
+ * Draw background
+ */
 function drawBackground(){
+    //background and offset to create moving effect
     image(sky, offSetX, 0);
     image(downLayer, offSetX, 0);
     image(middleLayer, offSetX, 0);
@@ -1101,17 +1217,20 @@ function drawBackground(){
     image(topLayer, offSetX+1000, 0);
     image(light, offSetX+1000, 0);
 
+    // if gameState is runGame, move background
     if (gameState == runGame){
         offSetX--;
         if(offSetX <= -1000) offSetX = 0;
     }
+
+    // show fps every second
     if (round(millis()/1000) == timer){
         fps = getFPS();
         timer++;
     }
-
     push();
         fill('green');
+        textAlign(CENTER);
         textSize(16);
         text(`${fps} fps`, 950, 15);
     pop();
