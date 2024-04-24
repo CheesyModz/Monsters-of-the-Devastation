@@ -37,6 +37,7 @@
  * https://pixabay.com/sound-effects/game-bonus-144751/
  * https://pixabay.com/sound-effects/monster-sound-medium-death-94826/
  * https://pixabay.com/sound-effects/male-hurt7-48124/
+ * https://pixabay.com/sound-effects/computer-startup-music-97699/
  * 
  * Author: Gary Huang
  * Date: Mar 19, 2024
@@ -124,7 +125,7 @@ let randomCoins;
 let randomCoinGet = true;
 
 // music & sound effects
-let backgroundMusic, collectPowerup, playerDeath, gameOverSound, purchasedSound, itemEquip, completedSound, bossDeath, playerHurt;
+let backgroundMusic, collectPowerup, playerDeath, gameOverSound, purchasedSound, itemEquip, completedSound, bossDeath, playerHurt, startup;
 
 /**
  * Preload images, sounds and font
@@ -193,6 +194,9 @@ function preload(){
     completedSound = loadSound("assets/Music/game bonus.mp3");
     bossDeath = loadSound("assets/Music/death.mp3");
     playerHurt = loadSound("assets/Music/male hurt.mp3");
+    startup = loadSound("assets/Music/startup.mp3");
+    startup.setVolume(0.5);
+
 
     // font
     font = loadFont("assets/Font/Watanabe.ttf");
@@ -211,10 +215,10 @@ function setup(){
     world.gravity.y = 5;
 
     // player
-    player = new Sprite(100, 500, 32, 32);
+    player = new Sprite(500, 500, 32, 32);
     player.scale *= 2;
     player.health = 5;
-    for (character of characters){
+    for (let character of characters){
         player.addAni(`${character}atk1`, `assets/${character}/${character}_Attack1_4.png`, { frameSize: [32, 32], frames: 4 });
         player.addAni(`${character}atk2`, `assets/${character}/${character}_Attack2_6.png`, { frameSize: [32, 32], frames: 6 });
         player.addAni(`${character}death`, `assets/${character}/${character}_Death_8.png`, { frameSize: [32, 32], frames: 8 });
@@ -226,6 +230,7 @@ function setup(){
         player.addAni(`${character}throw`, `assets/${character}/${character}_Throw_4.png`, { frameSize: [32, 32], frames: 4 });
         player.addAni(`${character}idle`, `assets/${character}/${character}_Idle_4.png`, { frameSize: [32, 32], frames: 4 });
     }
+    player.ani = `${currentCharacter}idle`;
     playerSensor = new Sprite(player.x, player.y+5, 50, 60, 'none');
     playerSensor.visible = false;
     new GlueJoint(player, playerSensor);
@@ -285,7 +290,7 @@ function setup(){
         .position(440, 310)
         .hide()
         .mousePressed(() => {
-            gameState = runGame;
+            gameState = tutorial;
             player.ani = `${currentCharacter}idle`;
             opacity = 255;
             leaveIntro();
@@ -520,6 +525,8 @@ function setup(){
         .mouseOver(() => {
             socialText = "@itscheesemodz";
         });
+
+    startup.play();
 }
 
 /**
@@ -625,6 +632,7 @@ function enterScreen(){
         opacity = 255;
         enter = true;
         timer = round(millis()/1000);
+        if (startup.isPlaying) startup.pause();
     }
 }
 
@@ -759,6 +767,87 @@ function credits(){
     Sounds effects by @Pixabay @Universfield\n \
     Font by @Pinisiart", 500, 175);
 }
+
+
+// tutorial variables
+let tutorialKeys = [
+    'A',
+    'D',
+    'W',
+    'L',
+    'J',
+    'K',
+    'B'
+];
+let tutorialText = [
+    "Press 'A' to move Left",
+    "Press 'D' to move right",
+    "Press 'W' to jump",
+    "Press 'L' to throw rocks",
+    "Press 'J' to single punch",
+    "Press 'K' to double punch",
+    "Press 'B' to continue"
+];
+let count = 0;
+
+/**
+ * Tutorial screen
+ */
+function tutorial(){
+    drawBackground();
+
+    if (enter){
+        fill('white');
+        textSize(56);
+        enter = false;
+    }
+
+    player.draw();
+    player.update();
+
+    text(tutorialText[count], 500, 100);
+
+    // fade out animation
+    if (opacity > 0){
+        push();
+            fill(255, opacity);
+            text(`Welcome to tutorial`, 500, 250);
+            opacity -= 2;
+        pop();
+    }
+
+    if (kb.pressing(tutorialKeys[count])){
+        if (tutorialKeys[count] == 'A'){
+            player.mirror.x = true;
+            player.vel.x = -2;
+        }else if (tutorialKeys[count] == 'D'){
+            player.changeAni(`${currentCharacter}run`);
+            player.mirror.x = false;
+            player.vel.x = 2;
+        }else if (tutorialKeys[count] == 'W'){
+            player.changeAni(`${currentCharacter}jump`);
+            player.vel.y = 15;
+        }else if (tutorialKeys[count] == 'J') player.changeAni(`${currentCharacter}atk1`);
+        else if (tutorialKeys[count] == 'K') player.changeAni(`${currentCharacter}atk2`);
+        else if (tutorialKeys[count] == 'L'){
+            hand.x = player.x+25;
+            hand.y = player.y;
+            rocks.amount++;
+            rocks[rocks.amount-1].image = rocksImg[round(random(0, rocksImg.length-1))];
+            rocks[rocks.amount-1].speed = 10;
+        }else if (tutorialKeys[count] == 'B'){
+            gameState = runGame;
+            player.x = 100;
+            opacity = 255;
+            enter = true;
+        }
+        count++;
+    }
+
+    rocks.draw();
+    rocks.update();
+}
+
 
 // shoot cooldown
 let shootCd = 0;
