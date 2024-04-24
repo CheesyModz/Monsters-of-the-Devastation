@@ -127,6 +127,8 @@ let randomCoinGet = true;
 // music & sound effects
 let backgroundMusic, collectPowerup, playerDeath, gameOverSound, purchasedSound, itemEquip, completedSound, bossDeath, playerHurt, startup;
 
+let tutorialShow = true;
+
 /**
  * Preload images, sounds and font
  */
@@ -290,7 +292,10 @@ function setup(){
         .position(440, 310)
         .hide()
         .mousePressed(() => {
-            gameState = tutorial;
+            if (tutorialShow){
+                gameState = tutorial;
+                tutorialShow = false;
+            }else gameState = runGame;
             player.ani = `${currentCharacter}idle`;
             opacity = 255;
             leaveIntro();
