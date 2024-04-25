@@ -697,6 +697,7 @@ function shop(){
         owletButton.show();
         dudeButton.show();
         enter = false;
+        textAlign(CENTER);
     }
 
     image(coinImg, 5, 10);
@@ -823,6 +824,7 @@ function tutorial(){
 
     if (kb.pressing(tutorialKeys[count])){
         if (tutorialKeys[count] == 'A'){
+            player.changeAni(`${currentCharacter}run`);
             player.mirror.x = true;
             player.vel.x = -2;
         }else if (tutorialKeys[count] == 'D'){
@@ -835,6 +837,7 @@ function tutorial(){
         }else if (tutorialKeys[count] == 'J') player.changeAni(`${currentCharacter}atk1`);
         else if (tutorialKeys[count] == 'K') player.changeAni(`${currentCharacter}atk2`);
         else if (tutorialKeys[count] == 'L'){
+            player.changeAni(`${currentCharacter}throw`);
             hand.x = player.x+25;
             hand.y = player.y;
             rocks.amount++;
