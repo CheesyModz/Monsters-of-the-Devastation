@@ -5,7 +5,8 @@
  * https://elthen.itch.io/2d-pixel-art-minotaur-sprites
  * https://yrixsasow.itch.io/heart-icon-2
  * https://osmanfrat.itch.io/coin
- * 
+ * https://elthen.itch.io/2d-pixel-art-cat-sprites
+ *  
  * Scrolling Background:
  * https://pixfinity.itch.io/the-dungeon-pack
  * 
@@ -53,7 +54,7 @@ let isPunching = false;
 let isDoublePunching = false;
 
 // sprite objects
-let player, hand, rocks, floor, box;
+let player, hand, rocks, floor, cat;
 let currentCharacter = 'Pink_Monster';
 let characters = ['Pink_Monster', 'Owlet_Monster', 'Dude_Monster'];
 
@@ -65,7 +66,7 @@ let playerSensor;
 
 // image objects
 let rocksImg = [];
-let boss, bossImg, coinImg, heartImg, pinkMonster, owletMonster, dudeMonster;
+let boss, bossImg, coinImg, heartImg, pinkMonster, owletMonster, dudeMonster, catShopImg, catImg;
 
 // background
 let light, sky, downLayer, middleLayer, topLayer;
@@ -83,9 +84,10 @@ let newGameButton, gura, p5logo;
 let settingsButton, closeButton, homeButton, musicOnButton, musicOffButton, newGameButtonSquare;
 
 // shop variables - buttons, if bought
-let pinkButton, owletButton, dudeButton;
+let pinkButton, owletButton, dudeButton, petButton;
 let owletBuy = false;
 let dudeBuy = false;
+let petBuy = false;
 
 let backButton;
 
@@ -157,6 +159,8 @@ function preload(){
         loadAnimation('assets/Basic Demon/warp skull/WarpSkull.png', { frameSize: [16, 16], frames: 4 })
     ];
     bossImg = loadImage('assets/Minotaur - Sprite Sheet.png');
+
+    catImg = loadImage('assets/Cat Sprite Sheet.png');
     
     // hearts and coins
     heartImg = loadImage('assets/heart.png');
@@ -173,6 +177,8 @@ function preload(){
     pinkMonster = loadImage('assets/Pink_Monster/Pink_Monster.png');
     owletMonster = loadImage('assets/Owlet_Monster/Owlet_Monster.png');
     dudeMonster = loadImage('assets/Dude_Monster/Dude_Monster.png');
+
+    catShopImg = loadImage('assets/cat sprite.png');
 
     keysImgs = [
         loadImage('assets/Pixel Keyboard Lite/PNG Sprites/1 Bit/pkl_lite_keys_0_one_letter_w.png'),
@@ -215,6 +221,21 @@ function setup(){
     textFont(font);
     new Canvas(1000, 700);
     world.gravity.y = 5;
+
+    // cat
+    cat = new Sprite(50, 530);
+    cat.scale *= 2;
+    cat.spriteSheet = catImg;
+    cat.collider = 'None';
+    cat.addAnis({
+        clean: { row: 3, frameSize: [32, 32], frames: 4 },
+        move: { row: 5, frameSize: [32, 32], frames: 8 },
+        sleep: { row: 6, frameSize: [32, 32], frames: 4 },
+        jump: { row: 8, frameSize: [32, 32], frames: 7 },
+        scared: { row: 9, frameSize: [32, 32], frames: 8},
+        idle: { row: 1, frameSize: [32, 32], frames: 4 },
+    });
+    cat.visible = false;
 
     // player
     player = new Sprite(500, 500, 32, 32);
@@ -333,7 +354,7 @@ function setup(){
     // shop buttons
     pinkButton = createButton('Equipped')
         .hide()
-        .position(215, 370)
+        .position(220, 370)
         .mousePressed(() => {
         if (currentCharacter != 'Pink_Monster'){
             currentCharacter = 'Pink_Monster';
@@ -349,30 +370,47 @@ function setup(){
             coins -= 50;
             owletBuy = true;
             currentCharacter = 'Owlet_Monster';
-            owletButton.html('Equipped');
+            owletButton.html('Equipped')
+                .position(470, 370);
             purchasedSound.play();
         }else if (owletBuy){
-            owletButton.html('Equipped');
+            owletButton.html('Equipped')
+                .position(470, 370);
             itemEquip.play();
             currentCharacter = 'Owlet_Monster';
         }
     });
     dudeButton = createButton('Buy')
         .hide()
-        .position(745, 370)
+        .position(740, 370)
         .mousePressed(() => {
         if (coins >= 100 && !dudeBuy && currentCharacter != 'Dude_Monster'){
             coins -= 100;
             dudeBuy = true;
             currentCharacter = 'Dude_Monster';
-            dudeButton.html('Equipped');
+            dudeButton.html('Equipped')
+                .position(725, 370);
             purchasedSound.play()
         }else if (dudeBuy){
-            dudeButton.html('Equipped');
+            dudeButton.html('Equipped')
+                .position(725, 370);
             itemEquip.play();
             currentCharacter = 'Dude_Monster';
         }
     });
+    petButton = createButton('Buy')
+        .hide()
+        .position(485, 525)
+        .mousePressed(() => {
+            if (coins >= 150 && !petBuy){
+                coins -= 150;
+                petBuy = true;
+                petButton.html('Equipped')
+                    .position(470, 525);
+                purchasedSound.play();
+                cat.visible = true;
+            }
+        })
 
     backButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Home Square Button.png')
         .size(50, 50)
@@ -482,6 +520,7 @@ function setup(){
     pinkMonster.resize(100, 100);
     owletMonster.resize(100, 100);
     dudeMonster.resize(100, 100);
+    catShopImg.resize(100, 100);
     for (let i = 0; i < keysImgs.length; i++) keysImgs[i].resize(50, 50);
     sky.resize(1000, 700);
     downLayer.resize(1000, 700);
@@ -696,6 +735,7 @@ function shop(){
         pinkButton.show();
         owletButton.show();
         dudeButton.show();
+        petButton.show();
         enter = false;
         textAlign(CENTER);
     }
@@ -709,6 +749,7 @@ function shop(){
     image(pinkMonster, 210, 250);
     image(owletMonster, 460, 250);
     image(dudeMonster, 710, 250);
+    image(catShopImg, 460, 425);
 
     textSize(16);
     image(coinImg, 230, 230);
@@ -717,11 +758,22 @@ function shop(){
     text('50', 515, 245);
     image(coinImg, 730, 230);
     text('100',  770, 245);
+    image(coinImg, 480, 430);
+    text('150',  520, 445);
 
     // change button text if user equips or buys
-    if (currentCharacter != 'Pink_Monster') pinkButton.html('Equip');
-    if (owletBuy && currentCharacter != 'Owlet_Monster') owletButton.html('Equip');
-    if (dudeBuy && currentCharacter != 'Dude_Monster') dudeButton.html('Equip');
+    if (currentCharacter != 'Pink_Monster'){
+        pinkButton.html('Equip')
+            .position(230, 370);
+    }
+    if (owletBuy && currentCharacter != 'Owlet_Monster'){
+        owletButton.html('Equip')
+            .position(480, 370);
+    }
+    if (dudeBuy && currentCharacter != 'Dude_Monster'){
+            dudeButton.html('Equip')
+            .position(735, 370);
+    }
 }
 
 /**
@@ -732,6 +784,7 @@ function leaveShop(){
     pinkButton.hide();
     owletButton.hide();
     dudeButton.hide();
+    petButton.hide();
 }
 
 /**
@@ -762,7 +815,7 @@ function credits(){
     text("Game Created by Gary Huang\n \
     Characters by @Free Game Assets(GUI, Sprite, Tilesets)\n \
     Monsters by @DeepDiveGameStudio\n \
-    Boss by @Elthen's Pixel Art Shop\n \
+    Boss & Cat by @Elthen's Pixel Art Shop\n \
     Background by @Pixfinity\n \
     Heart by @Yrixsasow\n \
     Coin by @OZU\n \
@@ -810,6 +863,8 @@ function tutorial(){
 
     player.draw();
     player.update();
+
+    allSprites.debug = mouse.pressing();
 
     text(tutorialText[count], 500, 100);
 
@@ -999,27 +1054,39 @@ function runGame(){
         player.mirror.x = true;
         player.vel.x = -2;
         facing = false;
+        cat.mirror.x = true;
+        cat.changeAni('move');
     }else if (kb.pressing('d') || kb.pressing('D')){
         player.changeAni(`${currentCharacter}run`);
         player.mirror.x = false;
         player.vel.x = 2;
         facing = true;
+        cat.mirror.x = false;
+        cat.changeAni('move');
     }else{
         if (player.vel.y == 0) player.changeAni(`${currentCharacter}idle`);
+        if (cat.vel.x == 0) cat.changeAni('idle');
     }
 
-    if (facing) hand.x = player.x+25;
-    else hand.x = player.x-25;
+    if (facing){
+        hand.x = player.x+25;
+        cat.moveTo(hand.x-75);
+    }else{
+        hand.x = player.x-25;
+        cat.moveTo(hand.x+75);
+    }
     hand.y = player.y;
 
     if (kb.pressing('j') || kb.pressing('J')){
         player.changeAni(`${currentCharacter}atk1`);
         isPunching = true;
         isDoublePunching = false;
+        cat.changeAni('clean');
     }else if (kb.pressing('k') || kb.pressing('K')){
         player.changeAni(`${currentCharacter}atk2`);
         isDoublePunching = true;
         isPunching = false;
+        cat.changeAni('clean');
     }else if (kb.pressing('l') || kb.pressing('L')){
         if (!shot){
             rocks.amount++;
@@ -1031,13 +1098,19 @@ function runGame(){
         player.changeAni(`${currentCharacter}throw`);
         isPunching = false;
         isDoublePunching = false;
+        cat.changeAni('clean');
     }else{
         isPunching = false;
         isDoublePunching = false;
     }
 
-    if (player.x < -20) player.x = 980;
-    else if (player.x > 1020) player.x = 20;
+    if (player.x < -20) {
+        player.x = 980;
+        cat.x = 1030;
+    }else if (player.x > 1020){
+        player.x = 20;
+        cat.x = -30;
+    }
 
     // change screen if conditions are met
     if (enemies.amount == 0 && stage != 3){
@@ -1057,6 +1130,7 @@ function runGame(){
     if (playerHitCd != 0){
         playerHitCd--;
         player.changeAni(`${currentCharacter}hurt`);
+        cat.changeAni('scared');
     }
     if (enemyHitCd != 0) enemyHitCd--;
 
@@ -1101,6 +1175,8 @@ function death(){
         player.changeAni(`${currentCharacter}death`);
         player.update();
         player.ani.frameDelay = 10;
+        cat.changeAni('sleep');
+        cat.update();
 
         // show full animation before changing screen
         if (player.ani.frame == player.ani.lastFrame){
@@ -1203,8 +1279,13 @@ function stageCompletion(){
         randomCoinGet = true;
         spawnEnemy = true;
         opacity = 255;
-        if (stage == 2) player.x = 500;
-        else player.x = 100;
+        if (stage == 2){
+            player.x = 500;
+            cat.x = 450;
+        }else{
+            player.x = 100;
+            cat.x = 50;
+        }
         player.y = 500;
         gameState = runGame; 
         settingsButton.show();
@@ -1279,6 +1360,7 @@ function restartGame(){
     player.health = 5;
     player.x = 100;
     player.y = 500;
+    cat.x = 50;
     stage = 1;
     boss.health = 200;
     boss.x = 700;
