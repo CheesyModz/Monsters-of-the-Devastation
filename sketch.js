@@ -115,13 +115,13 @@ let bossMoves = [
     'atk3'
 ];
 let changeMoveCd = 0;
-let tempBossSpeed;
+let tempBossSpeed, tempCatSpeed;
 
 let stage = 1;
 let font;
 
 // coins
-let coins = 0;
+let coins = 500;
 let coinMultiplier = 1;
 let randomCoins;
 let randomCoinGet = true;
@@ -442,7 +442,9 @@ function setup(){
         .mousePressed(() => {
             gameState = setting;
             tempBossSpeed = boss.speed;
+            tempCatSpeed = cat.speed;
             boss.speed = 0;
+            cat.speed = 0;
             closeButton.show();
             homeButton.show();
             musicOnButton.show();
@@ -457,6 +459,7 @@ function setup(){
             gameState = runGame;
             leaveSettings();
             boss.speed = tempBossSpeed;
+            cat.speed = tempCatSpeed;
             if (player.health <= 0) gameState = gameOver;
         });
     homeButton = createImg('assets/Prinbles/Black-Icon/Home.png')
@@ -627,6 +630,7 @@ function playerHit(enemy, player){
         if (player.health <= 0){
             gameState = death;
             boss.speed = 0;
+            cat.speed = 0;
         }
     }
 }
@@ -859,6 +863,7 @@ function tutorial(){
         fill('white');
         textSize(56);
         enter = false;
+        settingsButton.hide();
     }
 
     player.draw();
@@ -903,6 +908,7 @@ function tutorial(){
             player.x = 100;
             opacity = 255;
             enter = true;
+            settingsButton.show();
         }
         count++;
     }
@@ -916,7 +922,7 @@ function tutorial(){
 let shootCd = 0;
 let shot = false;
 // boos move enemies' hp bar
-let move, healthWidth;
+let move, healthWidth, distance;
 
 function runGame(){
     drawBackground();
@@ -1070,12 +1076,21 @@ function runGame(){
 
     if (facing){
         hand.x = player.x+25;
-        cat.moveTo(hand.x-75);
+        distance = hand.x-75;
     }else{
         hand.x = player.x-25;
-        cat.moveTo(hand.x+75);
+        distance = hand.x+55;
     }
     hand.y = player.y;
+
+    if (cat.x < distance-10){
+        cat.speed = 1;
+        cat.direction = 'right';
+    }else if (cat.x > distance+10){
+        cat.speed = 1;
+        cat.direction = 'left';
+    }else cat.speed = 0;
+
 
     if (kb.pressing('j') || kb.pressing('J')){
         player.changeAni(`${currentCharacter}atk1`);
@@ -1119,6 +1134,7 @@ function runGame(){
     }else if (boss.health <= 0){
         gameState = death;
         boss.speed = 0;
+        cat.speed = 0;
     }
 
     // cool downs
