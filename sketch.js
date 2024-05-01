@@ -39,6 +39,7 @@
  * https://pixabay.com/sound-effects/monster-sound-medium-death-94826/
  * https://pixabay.com/sound-effects/male-hurt7-48124/
  * https://pixabay.com/sound-effects/computer-startup-music-97699/
+ * https://pixabay.com/sound-effects/search/success/
  * 
  * Author: Gary Huang
  * Date: Mar 19, 2024
@@ -121,13 +122,13 @@ let stage = 1;
 let font;
 
 // coins
-let coins = 500;
+let coins = 0;
 let coinMultiplier = 1;
 let randomCoins;
 let randomCoinGet = true;
 
 // music & sound effects
-let backgroundMusic, collectPowerup, playerDeath, gameOverSound, purchasedSound, itemEquip, completedSound, bossDeath, playerHurt, startup;
+let backgroundMusic, collectPowerup, playerDeath, gameOverSound, purchasedSound, itemEquip, completedSound, bossDeath, playerHurt, startup, success;
 
 let tutorialShow = true;
 
@@ -204,7 +205,8 @@ function preload(){
     playerHurt = loadSound("assets/Music/male hurt.mp3");
     startup = loadSound("assets/Music/startup.mp3");
     startup.setVolume(0.5);
-
+    success = loadSound("assets/Music/success.mp3");
+    success.setVolume(0.2);
 
     // font
     font = loadFont("assets/Font/Watanabe.ttf");
@@ -256,7 +258,8 @@ function setup(){
     player.ani = `${currentCharacter}idle`;
     playerSensor = new Sprite(player.x, player.y+5, 50, 60, 'none');
     playerSensor.visible = false;
-    new GlueJoint(player, playerSensor);
+    let glueJoint = new GlueJoint(player, playerSensor);
+    glueJoint.visible = false;
     // player's hand for rock throw
     hand = new Sprite();
     hand.diameter = 1;
@@ -816,7 +819,7 @@ function credits(){
 
     textAlign(CENTER);
     textSize(24);
-    text("Game Created by Gary Huang\n \
+    text("Game Created by Gary Huang @CheesyModz\n \
     Characters by @Free Game Assets(GUI, Sprite, Tilesets)\n \
     Monsters by @DeepDiveGameStudio\n \
     Boss & Cat by @Elthen's Pixel Art Shop\n \
@@ -911,6 +914,7 @@ function tutorial(){
             settingsButton.show();
         }
         count++;
+        success.play();
     }
 
     rocks.draw();
