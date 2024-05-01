@@ -55,7 +55,7 @@ let isPunching = false;
 let isDoublePunching = false;
 
 // sprite objects
-let player, hand, rocks, floor, cat;
+let player, hand, rocks, floor, cat, glueJoint;
 let currentCharacter = 'Pink_Monster';
 let characters = ['Pink_Monster', 'Owlet_Monster', 'Dude_Monster'];
 
@@ -258,7 +258,7 @@ function setup(){
     player.ani = `${currentCharacter}idle`;
     playerSensor = new Sprite(player.x, player.y+5, 50, 60, 'none');
     playerSensor.visible = false;
-    let glueJoint = new GlueJoint(player, playerSensor);
+    glueJoint = new GlueJoint(player, playerSensor);
     glueJoint.visible = false;
     // player's hand for rock throw
     hand = new Sprite();
@@ -307,8 +307,17 @@ function setup(){
     boss.collides(rocks, enemyHit);
     boss.collides(player, playerHit);
 
-    allSprites.autoDraw = false;
+    //setting allSprites autodraw to false messses up with the sprite buttons
+    // allSprites.autoDraw = false;
     allSprites.autoUpdate = false;
+    cat.autoDraw = false;
+    player.autoDraw = false;
+    playerSensor.autoDraw = false;
+    glueJoint.autoDraw = false;
+    rocks.autoDraw = false;
+    floor.autoDraw = false;
+    enemies.autoDraw = false;
+    boss.autoDraw = false;
 
     // intro buttons
     playButton = createImg('assets/Menu Buttons/Large Buttons/Large Buttons/Play Button.png')
@@ -327,6 +336,7 @@ function setup(){
             creditsButton.hide();
             backButton.hide();
             settingsButton.show();
+            if (petBuy) cat.visible = true;
         });
     shopButton = createImg('assets/Prinbles/Black-Icon/Cart.png')
         .size(50, 50)
@@ -352,67 +362,6 @@ function setup(){
             if (gameState == intro) leaveIntro();
             else if (gameState == shop) leaveShop();
             gameState = credits;
-        })
-
-    // shop buttons
-    pinkButton = createButton('Equipped')
-        .hide()
-        .position(220, 370)
-        .mousePressed(() => {
-        if (currentCharacter != 'Pink_Monster'){
-            currentCharacter = 'Pink_Monster';
-            pinkButton.html('Equipped');
-            itemEquip.play();
-        }
-    });
-    owletButton = createButton('Buy')
-        .hide()
-        .position(485, 370)
-        .mousePressed(() => {
-        if (coins >= 50 && !owletBuy && currentCharacter != 'Owlet_Monster'){
-            coins -= 50;
-            owletBuy = true;
-            currentCharacter = 'Owlet_Monster';
-            owletButton.html('Equipped')
-                .position(470, 370);
-            purchasedSound.play();
-        }else if (owletBuy){
-            owletButton.html('Equipped')
-                .position(470, 370);
-            itemEquip.play();
-            currentCharacter = 'Owlet_Monster';
-        }
-    });
-    dudeButton = createButton('Buy')
-        .hide()
-        .position(740, 370)
-        .mousePressed(() => {
-        if (coins >= 100 && !dudeBuy && currentCharacter != 'Dude_Monster'){
-            coins -= 100;
-            dudeBuy = true;
-            currentCharacter = 'Dude_Monster';
-            dudeButton.html('Equipped')
-                .position(725, 370);
-            purchasedSound.play()
-        }else if (dudeBuy){
-            dudeButton.html('Equipped')
-                .position(725, 370);
-            itemEquip.play();
-            currentCharacter = 'Dude_Monster';
-        }
-    });
-    petButton = createButton('Buy')
-        .hide()
-        .position(485, 525)
-        .mousePressed(() => {
-            if (coins >= 150 && !petBuy){
-                coins -= 150;
-                petBuy = true;
-                petButton.html('Equipped')
-                    .position(470, 525);
-                purchasedSound.play();
-                cat.visible = true;
-            }
         })
 
     backButton = createImg('assets/Menu Buttons/Square Buttons/Square Buttons/Home Square Button.png')
@@ -732,6 +681,38 @@ function leaveIntro(){
 }
 
 /**
+ * Function to create shop buttons - buy/equip
+ */
+function createShopButtons(){
+    push();
+        textSize(14);
+        // shop buttons
+        pinkButton = new Sprite(260, 370, 75, 25, 'kinematic');
+        pinkButton.text = 'Equipped';
+        pinkButton.fill = 'white';
+        pinkButton.stroke = 'black';
+
+        owletButton = new Sprite(505, 370, 75, 25, 'kinematic');
+        if (currentCharacter == 'Owlet_Monster') owletButton.text = 'Equipped';
+        else owletButton.text = 'Buy'
+        owletButton.fill = 'white';
+        owletButton.stroke = 'black';
+
+        dudeButton = new Sprite(760, 370, 75, 25, 'kinematic');
+        if (currentCharacter == 'Dude_Monster') dudeButton.text = 'Equipped';
+        else dudeButton.text = 'Buy';
+        dudeButton.fill = 'white';
+        dudeButton.stroke = 'black';
+
+        petButton = new Sprite(505, 525, 75, 25, 'kinematic');
+        if (petBuy) petButton.text = 'Equipped';
+        else petButton.text = 'Buy';
+        petButton.fill = 'white';
+        petButton.stroke = 'black';
+    pop();
+}
+
+/**
  * Shop screen
  */
 function shop(){
@@ -739,10 +720,7 @@ function shop(){
 
     // upon entry do the following
     if (enter){
-        pinkButton.show();
-        owletButton.show();
-        dudeButton.show();
-        petButton.show();
+        createShopButtons();
         enter = false;
         textAlign(CENTER);
     }
@@ -768,19 +746,60 @@ function shop(){
     image(coinImg, 480, 430);
     text('150',  520, 445);
 
+    //buttons
+    pinkButton.draw();
+    if (pinkButton.mouse.pressed()){ 
+        if (currentCharacter != 'Pink_Monster'){
+            currentCharacter = 'Pink_Monster';
+            pinkButton.text = 'Equipped';
+            itemEquip.play();
+        }
+    }
+
+    owletButton.draw();
+    if (owletButton.mouse.pressed()){
+        if (coins >= 50 && !owletBuy && currentCharacter != 'Owlet_Monster'){
+            coins -= 50;
+            owletBuy = true;
+            currentCharacter = 'Owlet_Monster';
+            owletButton.text = 'Equipped';
+            purchasedSound.play();
+        }else if (owletBuy){
+            owletButton.text = 'Equipped';
+            itemEquip.play();
+            currentCharacter = 'Owlet_Monster';
+        }
+    }
+
+    dudeButton.draw();
+    if (dudeButton.mouse.pressed()){
+        if (coins >= 100 && !dudeBuy && currentCharacter != 'Dude_Monster'){
+            coins -= 100;
+            dudeBuy = true;
+            currentCharacter = 'Dude_Monster';
+            dudeButton.text = 'Equipped';
+            purchasedSound.play()
+        }else if (dudeBuy){
+            dudeButton.text = 'Equipped';
+            itemEquip.play();
+            currentCharacter = 'Dude_Monster';
+        }
+    }
+
+    petButton.draw();
+    if (petButton.mouse.pressed()){
+        if (coins >= 150 && !petBuy){
+            coins -= 150;
+            petBuy = true;
+            petButton.text = 'Equipped';
+            purchasedSound.play();
+        }
+    }
+
     // change button text if user equips or buys
-    if (currentCharacter != 'Pink_Monster'){
-        pinkButton.html('Equip')
-            .position(230, 370);
-    }
-    if (owletBuy && currentCharacter != 'Owlet_Monster'){
-        owletButton.html('Equip')
-            .position(480, 370);
-    }
-    if (dudeBuy && currentCharacter != 'Dude_Monster'){
-            dudeButton.html('Equip')
-            .position(735, 370);
-    }
+    if (currentCharacter != 'Pink_Monster') pinkButton.text = 'Equip';
+    if (owletBuy && currentCharacter != 'Owlet_Monster') owletButton.text = 'Equip';
+    if (dudeBuy && currentCharacter != 'Dude_Monster') dudeButton.text = 'Equip';
 }
 
 /**
@@ -788,10 +807,10 @@ function shop(){
  */
 function leaveShop(){
     enter = true;
-    pinkButton.hide();
-    owletButton.hide();
-    dudeButton.hide();
-    petButton.hide();
+    pinkButton.remove();
+    owletButton.remove();
+    dudeButton.remove();
+    petButton.remove();
 }
 
 /**
@@ -871,8 +890,6 @@ function tutorial(){
 
     player.draw();
     player.update();
-
-    allSprites.debug = mouse.pressing();
 
     text(tutorialText[count], 500, 100);
 
