@@ -712,6 +712,8 @@ function createShopButtons(){
     pop();
 }
 
+let timerShake = 0;
+
 /**
  * Shop screen
  */
@@ -723,6 +725,11 @@ function shop(){
         createShopButtons();
         enter = false;
         textAlign(CENTER);
+    }
+
+    if (timerShake > 0){
+        translate(random(-5,5),random(-5,5));
+        timerShake--;
     }
 
     image(coinImg, 5, 10);
@@ -753,7 +760,7 @@ function shop(){
             currentCharacter = 'Pink_Monster';
             pinkButton.text = 'Equipped';
             itemEquip.play();
-        }
+        }else timerShake = 25;
     }
 
     owletButton.draw();
@@ -768,7 +775,7 @@ function shop(){
             owletButton.text = 'Equipped';
             itemEquip.play();
             currentCharacter = 'Owlet_Monster';
-        }
+        }else timerShake = 25;
     }
 
     dudeButton.draw();
@@ -783,7 +790,7 @@ function shop(){
             dudeButton.text = 'Equipped';
             itemEquip.play();
             currentCharacter = 'Dude_Monster';
-        }
+        }else timerShake = 25;
     }
 
     petButton.draw();
@@ -793,7 +800,7 @@ function shop(){
             petBuy = true;
             petButton.text = 'Equipped';
             purchasedSound.play();
-        }
+        }else timerShake = 25;
     }
 
     // change button text if user equips or buys
