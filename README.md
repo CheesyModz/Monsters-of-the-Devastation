@@ -8,7 +8,7 @@ Play game [here](https://editor.p5js.org/CheesyModz/sketches/qxQ6g5jR9)
 `d` to move right\
 `j` to punch\
 `k` to double punch\
-`l` to throw rocks\
+`l` to throw rocks
 
 # Credits
 
