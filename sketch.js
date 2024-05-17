@@ -148,7 +148,7 @@ function preload(){
         loadAnimation('assets/Basic Demon/antlered rascal/AntleredRascal.png', { frameSize: [16, 16], frames: 4 }),
         loadAnimation('assets/Basic Demon/clawed abomination/ClawedAbomination.png', { frameSize: [16, 16], frames: 4 }),
         loadAnimation('assets/Basic Demon/crimson imp/CrimsonImp.png', { frameSize: [16, 16], frames: 4 }),
-        loadAnimation('assets/Basic Demon/depraved blackguard/DepravedBlackguard.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/Depraved Blackguard/DepravedBlackguard.png', { frameSize: [16, 16], frames: 4 }),
         loadAnimation('assets/Basic Demon/fledgling demon/FledglingDemon.png', { frameSize: [16, 16], frames: 4 }),
         loadAnimation('assets/Basic Demon/floating eye/FloatingEye.png', { frameSize: [16, 16], frames: 4 }),
         loadAnimation('assets/Basic Demon/foul gouger/FoulGouger.png', { frameSize: [16, 16], frames: 4 }),
@@ -156,7 +156,7 @@ function preload(){
         loadAnimation('assets/Basic Demon/nefarious scamp/NefariousScamp.png', { frameSize: [16, 16], frames: 4 }),
         loadAnimation('assets/Basic Demon/pit balor/PitBalor.png', { frameSize: [16, 16], frames: 4 }),
         loadAnimation('assets/Basic Demon/pointed demonspawn/PointedDemonspawn.png', { frameSize: [16, 16], frames: 4 }),
-        loadAnimation('assets/Basic Demon/rascally demonling/RascallyDemonling.png', { frameSize: [16, 16], frames: 4 }),
+        loadAnimation('assets/Basic Demon/Rascally Demonling/RascallyDemonling.png', { frameSize: [16, 16], frames: 4 }),
         loadAnimation('assets/Basic Demon/tainted scoundrel/TaintedScoundrel.png', { frameSize: [16, 16], frames: 4 }),
         loadAnimation('assets/Basic Demon/warp skull/WarpSkull.png', { frameSize: [16, 16], frames: 4 })
     ];
@@ -483,6 +483,8 @@ function enterScreen(){
     }
 }
 
+let enterIntro = true;
+
 /**
  * Function to create intro buttons - controls social media
  */
@@ -493,14 +495,17 @@ function createIntroButtons(){
     controlsButton = new Sprite(500, 395, 120, 50, 'kinematic');
     controlsButton.img = controlsButtonImg;
 
-    creditsButton = new Sprite(855, 45, 50, 50, 'kinematic');
-    creditsButton.img = creditsButtonImg;
+    if (enterIntro){
+        creditsButton = new Sprite(855, 45, 50, 50, 'kinematic');
+        creditsButton.img = creditsButtonImg;
 
-    shopButton = new Sprite(905, 45, 50, 50, 'kinematic');
-    shopButton.img = shopButtonImg;
+        shopButton = new Sprite(905, 45, 50, 50, 'kinematic');
+        shopButton.img = shopButtonImg;
 
-    backButton = new Sprite(955, 45, 50, 50, 'kinematic');
-    backButton.img = backButtonImg;
+        backButton = new Sprite(955, 45, 50, 50, 'kinematic');
+        backButton.img = backButtonImg;
+        enterIntro = false;
+    }
 
     // socials
     gmail = new Sprite(760, 645, 40, 40, 'kinematic');
@@ -550,6 +555,7 @@ function intro(){
         if (tutorialShow){
             gameState = tutorial;
             tutorialShow = false;
+            enterIntro = true;
         }else{
             gameState = runGame;
             settingsButton = new Sprite(955, 45, 50, 50, 'kinematic');
